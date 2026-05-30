@@ -1,0 +1,133 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "close": "Close",
+    "back": "Back",
+    "search": "Search",
+    "noData": "No data available",
+    "all": "All"
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Create Account",
+    "email": "Email",
+    "password": "Password",
+    "name": "Full Name",
+    "phone": "Phone Number",
+    "phonePlaceholder": "09XXXXXXXX or +963XXXXXXXXX",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginHere": "Sign in",
+    "registerHere": "Create one",
+    "loginError": "Invalid email or password",
+    "logout": "Sign Out",
+    "welcomeBack": "Welcome back 👋",
+    "startBooking": "Create your account and start booking 🌟",
+    "or": "or"
+  },
+  "tabs": {
+    "explore": "Explore",
+    "appointments": "Appointments",
+    "favorites": "Favorites",
+    "profile": "Profile"
+  },
+  "salons": {
+    "search": "Search salons...",
+    "allCities": "All Cities",
+    "sortByDistance": "Nearest first",
+    "km": "km",
+    "rating": "Rating",
+    "reviews": "reviews",
+    "noReviews": "No reviews yet",
+    "services": "Services",
+    "hours": "Working Hours",
+    "about": "About",
+    "media": "Gallery",
+    "bookNow": "Book Now",
+    "whatsapp": "WhatsApp",
+    "closed": "Closed",
+    "open": "Open",
+    "noSalons": "No salons found",
+    "duration": "{{min}} min",
+    "price": "{{amount}} SYP"
+  },
+  "slots": {
+    "selectService": "Select Service",
+    "selectDate": "Select Date",
+    "selectTime": "Select Time",
+    "noSlots": "No available slots on this day",
+    "available": "Available"
+  },
+  "booking": {
+    "title": "Confirm Booking",
+    "service": "Service",
+    "date": "Date",
+    "time": "Time",
+    "price": "Price",
+    "duration": "Duration",
+    "notes": "Notes (optional)",
+    "notesPlaceholder": "Add any special requests...",
+    "confirm": "Confirm Booking",
+    "success": "Booking Confirmed!",
+    "successMsg": "You will be notified when the salon confirms your appointment"
+  },
+  "appointments": {
+    "title": "My Appointments",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "cancel": "Cancel Appointment",
+    "cancelConfirm": "Are you sure you want to cancel this appointment?",
+    "leaveReview": "Leave a Review",
+    "noUpcoming": "No upcoming appointments",
+    "noPast": "No past appointments",
+    "salon": "Salon",
+    "service": "Service",
+    "notes": "Notes"
+  },
+  "review": {
+    "title": "Your Review",
+    "rating": "Rating",
+    "comment": "Comment",
+    "commentPlaceholder": "Share your experience with this salon...",
+    "submit": "Submit Review",
+    "success": "Thank you for your review!",
+    "delete": "Delete Review",
+    "deleteConfirm": "Delete this review?"
+  },
+  "favorites": {
+    "title": "Favorites",
+    "empty": "You haven't added any salons to favorites yet",
+    "added": "Added to favorites",
+    "removed": "Removed from favorites"
+  },
+  "profile": {
+    "title": "My Profile",
+    "editProfile": "Edit Profile",
+    "myReviews": "My Reviews",
+    "notifications": "Notifications",
+    "totalAppointments": "Total Appointments",
+    "totalSpent": "Total Spent",
+    "name": "Name",
+    "phone": "Phone",
+    "saveChanges": "Save Changes",
+    "noReviews": "You haven't written any reviews yet"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications",
+    "unread": "Unread"
+  }
+}

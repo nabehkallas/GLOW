@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Salon;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class OrderController extends Controller
             ->latest()
             ->paginate(15);
 
-        return response()->json($orders);
+        return OrderResource::collection($orders);
     }
 
     public function store(Request $request)
@@ -35,7 +36,7 @@ class OrderController extends Controller
         abort_if($salon->status !== 'approved', 403, 'Your salon must be approved to place orders.');
 
         $order = DB::transaction(function () use ($data, $salon) {
-            $total = 0;
+            $total      = 0;
             $orderItems = [];
 
             foreach ($data['items'] as $item) {
@@ -67,13 +68,13 @@ class OrderController extends Controller
             return $order;
         });
 
-        return response()->json($order->load('items.product'), 201);
+        return new OrderResource($order->load('items.product'));
     }
 
     public function show(Request $request, Order $order)
     {
         abort_unless($order->salon_id === $request->user()->salon->id, 403);
 
-        return response()->json($order->load('items.product'));
+        return new OrderResource($order->load('items.product'));
     }
 }

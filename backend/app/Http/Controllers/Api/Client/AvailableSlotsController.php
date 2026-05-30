@@ -33,23 +33,18 @@ class AvailableSlotsController extends Controller
             ->where('day_of_week', $dayOfWeek)
             ->first();
 
-        // Salon hasn't set working hours yet or is closed that day
         if (! $workingHour || $workingHour->is_closed) {
             return response()->json([
                 'date'          => $date->toDateString(),
                 'day'           => $date->format('l'),
                 'is_open'       => false,
                 'working_hours' => null,
+                'service'       => null,
                 'slots'         => [],
             ]);
         }
 
-        $slots = $this->generateSlots(
-            $salon,
-            $date,
-            $workingHour,
-            $service->duration_minutes
-        );
+        $slots = $this->generateSlots($salon, $date, $workingHour, $service);
 
         return response()->json([
             'date'          => $date->toDateString(),
@@ -59,24 +54,41 @@ class AvailableSlotsController extends Controller
                 'open'  => $workingHour->open_time,
                 'close' => $workingHour->close_time,
             ],
-            'service'       => [
+            'service' => [
                 'id'               => $service->id,
                 'name'             => $service->name,
                 'duration_minutes' => $service->duration_minutes,
                 'price'            => $service->price,
+                'available_from'   => $service->available_from,
+                'available_until'  => $service->available_until,
             ],
-            'slots'         => $slots,
+            'slots' => $slots,
         ]);
     }
 
-    private function generateSlots(Salon $salon, Carbon $date, WorkingHour $wh, int $durationMinutes): array
+    private function generateSlots(Salon $salon, Carbon $date, WorkingHour $wh, SalonService $service): array
     {
+        $duration = $service->duration_minutes;
+        $capacity = $salon->capacity ?? 1;
+
+        // Effective window = intersection of salon hours and service hours (if set)
         $open  = Carbon::parse($date->toDateString() . ' ' . $wh->open_time);
         $close = Carbon::parse($date->toDateString() . ' ' . $wh->close_time);
-        $now   = Carbon::now();
 
-        // Fetch existing pending/confirmed appointments for this salon on this date, with service duration
-        $bookedSlots = Appointment::with('service:id,duration_minutes')
+        if ($service->available_from) {
+            $serviceOpen = Carbon::parse($date->toDateString() . ' ' . $service->available_from);
+            if ($serviceOpen->gt($open)) $open = $serviceOpen;
+        }
+
+        if ($service->available_until) {
+            $serviceClose = Carbon::parse($date->toDateString() . ' ' . $service->available_until);
+            if ($serviceClose->lt($close)) $close = $serviceClose;
+        }
+
+        $now = Carbon::now();
+
+        // All pending/confirmed appointments for this salon on this date
+        $booked = Appointment::with('service:id,duration_minutes')
             ->where('salon_id', $salon->id)
             ->whereIn('status', ['pending', 'confirmed'])
             ->whereDate('scheduled_at', $date->toDateString())
@@ -89,13 +101,16 @@ class AvailableSlotsController extends Controller
         $slots  = [];
         $cursor = $open->copy();
 
-        while ($cursor->copy()->addMinutes($durationMinutes)->lte($close)) {
+        while ($cursor->copy()->addMinutes($duration)->lte($close)) {
             $slotStart = $cursor->copy();
-            $slotEnd   = $cursor->copy()->addMinutes($durationMinutes);
+            $slotEnd   = $cursor->copy()->addMinutes($duration);
 
-            $isAvailable = ! $bookedSlots->contains(
-                fn($booked) => $slotStart->lt($booked['end']) && $slotEnd->gt($booked['start'])
-            );
+            // Count how many existing appointments overlap this slot
+            $overlapping = $booked->filter(
+                fn($b) => $slotStart->lt($b['end']) && $slotEnd->gt($b['start'])
+            )->count();
+
+            $isAvailable = $overlapping < $capacity;
 
             // Past slots on today are unavailable
             if ($date->isToday() && $slotStart->lte($now)) {
@@ -107,7 +122,7 @@ class AvailableSlotsController extends Controller
                 'available' => $isAvailable,
             ];
 
-            $cursor->addMinutes($durationMinutes);
+            $cursor->addMinutes($duration);
         }
 
         return $slots;

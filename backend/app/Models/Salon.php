@@ -20,6 +20,7 @@ class Salon extends Model
         'logo',
         'license_number',
         'status',
+        'capacity',
         'rejection_reason',
     ];
 
@@ -51,6 +52,16 @@ class Salon extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function media()
+    {
+        return $this->hasMany(SalonMedia::class);
+    }
+
+    public function favorites()
+    {
+        return $this->hasMany(ClientFavorite::class);
     }
 
     public function getAverageRatingAttribute(): ?float

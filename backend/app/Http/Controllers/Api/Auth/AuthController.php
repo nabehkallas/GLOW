@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\Salon;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -18,13 +19,13 @@ class AuthController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users',
             'password' => ['required', Password::min(8)],
-            'phone'    => 'nullable|string|max:20',
+            'phone'    => ['required', 'string', 'regex:/^(\+963|0)9[1-9]\d{7}$/'],
         ]);
 
         $user = User::create([...$data, 'role' => 'client']);
 
         return response()->json([
-            'user'  => $user,
+            'user'  => new UserResource($user),
             'token' => $user->createToken('api')->plainTextToken,
         ], 201);
     }
@@ -35,7 +36,7 @@ class AuthController extends Controller
             'name'           => 'required|string|max:255',
             'email'          => 'required|email|unique:users',
             'password'       => ['required', Password::min(8)],
-            'phone'          => 'nullable|string|max:20',
+            'phone'          => ['required', 'string', 'regex:/^(\+963|0)9[1-9]\d{7}$/'],
             'salon_name'     => 'required|string|max:255',
             'address'        => 'required|string',
             'city'           => 'required|string|max:100',
@@ -67,7 +68,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Registration submitted. Awaiting admin approval.',
-            'user'    => $user->load('salon'),
+            'user'    => new UserResource($user->load('salon')),
             'token'   => $user->createToken('api')->plainTextToken,
         ], 201);
     }
@@ -90,7 +91,7 @@ class AuthController extends Controller
         $user->tokens()->delete();
 
         return response()->json([
-            'user'  => $user->load('salon'),
+            'user'  => new UserResource($user->load('salon')),
             'token' => $user->createToken('api')->plainTextToken,
         ]);
     }
@@ -104,6 +105,13 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json($request->user()->load('salon'));
+        return new UserResource($request->user()->load('salon'));
+    }
+
+    public function updatePushToken(Request $request)
+    {
+        $request->validate(['token' => 'required|string|max:255']);
+        $request->user()->update(['expo_push_token' => $request->token]);
+        return response()->json(['message' => 'Push token updated.']);
     }
 }

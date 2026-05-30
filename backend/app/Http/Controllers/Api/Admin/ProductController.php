@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -14,7 +15,7 @@ class ProductController extends Controller
             ->latest()
             ->paginate(15);
 
-        return response()->json($products);
+        return ProductResource::collection($products);
     }
 
     public function store(Request $request)
@@ -28,12 +29,12 @@ class ProductController extends Controller
             'is_active'   => 'boolean',
         ]);
 
-        return response()->json(Product::create($data), 201);
+        return new ProductResource(Product::create($data));
     }
 
     public function show(Product $product)
     {
-        return response()->json($product);
+        return new ProductResource($product);
     }
 
     public function update(Request $request, Product $product)
@@ -49,7 +50,7 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        return response()->json($product);
+        return new ProductResource($product);
     }
 
     public function destroy(Product $product)

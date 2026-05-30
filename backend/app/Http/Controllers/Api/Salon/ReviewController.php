@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Salon;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ReviewResource;
 use Illuminate\Http\Request;
 
 class ReviewController extends Controller
@@ -12,7 +13,7 @@ class ReviewController extends Controller
         $salon = $request->user()->salon;
 
         $reviews = $salon->reviews()
-            ->with('client:id,name', 'appointment:id,scheduled_at')
+            ->with('client', 'appointment')
             ->when($request->rating, fn($q) => $q->where('rating', $request->rating))
             ->latest()
             ->paginate(15);
@@ -20,7 +21,7 @@ class ReviewController extends Controller
         return response()->json([
             'average_rating' => $salon->average_rating,
             'reviews_count'  => $salon->reviews_count,
-            'reviews'        => $reviews,
+            'reviews'        => ReviewResource::collection($reviews),
         ]);
     }
 }

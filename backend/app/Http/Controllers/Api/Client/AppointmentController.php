@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
 use App\Models\SalonService;
 use App\Models\WorkingHour;
+use App\Notifications\AppointmentBooked;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -16,11 +18,14 @@ class AppointmentController extends Controller
         $appointments = $request->user()
             ->appointments()
             ->with('salon', 'service')
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
+            ->when($request->status === 'upcoming', fn($q) => $q->whereIn('status', ['pending', 'confirmed']))
+            ->when($request->status === 'past',     fn($q) => $q->whereIn('status', ['completed', 'cancelled']))
+            ->when($request->status && !in_array($request->status, ['upcoming', 'past']),
+                fn($q) => $q->where('status', $request->status))
             ->orderBy('scheduled_at')
             ->paginate(15);
 
-        return response()->json($appointments);
+        return AppointmentResource::collection($appointments);
     }
 
     public function store(Request $request)
@@ -38,7 +43,6 @@ class AppointmentController extends Controller
         abort_unless($service->is_active, 422, 'This service is not available.');
         abort_unless($service->salon->isApproved(), 422, 'This salon is not accepting bookings.');
 
-        // 1. Check working hours
         $workingHour = WorkingHour::where('salon_id', $service->salon_id)
             ->where('day_of_week', $scheduledAt->dayOfWeek)
             ->first();
@@ -58,21 +62,31 @@ class AppointmentController extends Controller
             "Appointment must be within working hours ({$workingHour->open_time} – {$workingHour->close_time})."
         );
 
-        // 2. Check for booking conflicts (overlap detection, database-agnostic)
-        $existingAppointments = Appointment::with('service:id,duration_minutes')
+        // Check service-level availability hours
+        if ($service->available_from) {
+            $serviceOpen = Carbon::parse($scheduledAt->toDateString() . ' ' . $service->available_from);
+            abort_if($scheduledAt->lt($serviceOpen), 422, "This service is only available from {$service->available_from}.");
+        }
+        if ($service->available_until) {
+            $serviceClose = Carbon::parse($scheduledAt->toDateString() . ' ' . $service->available_until);
+            abort_if($scheduledEnd->gt($serviceClose), 422, "This service must finish by {$service->available_until}.");
+        }
+
+        $capacity = $service->salon->capacity ?? 1;
+
+        $overlappingCount = Appointment::with('service:id,duration_minutes')
             ->where('salon_id', $service->salon_id)
             ->whereIn('status', ['pending', 'confirmed'])
             ->whereDate('scheduled_at', $scheduledAt->toDateString())
-            ->get();
+            ->get()
+            ->filter(function ($appt) use ($scheduledAt, $scheduledEnd) {
+                $apptStart = Carbon::parse($appt->scheduled_at);
+                $apptEnd   = $apptStart->copy()->addMinutes($appt->service->duration_minutes);
+                return $scheduledAt->lt($apptEnd) && $scheduledEnd->gt($apptStart);
+            })
+            ->count();
 
-        $hasConflict = $existingAppointments->contains(function ($appt) use ($scheduledAt, $scheduledEnd) {
-            $apptStart = Carbon::parse($appt->scheduled_at);
-            $apptEnd   = $apptStart->copy()->addMinutes($appt->service->duration_minutes);
-
-            return $scheduledAt->lt($apptEnd) && $scheduledEnd->gt($apptStart);
-        });
-
-        abort_if($hasConflict, 422, 'This time slot is already booked. Please choose another time.');
+        abort_if($overlappingCount >= $capacity, 422, 'This time slot is fully booked. Please choose another time.');
 
         $appointment = Appointment::create([
             'client_id'        => $request->user()->id,
@@ -84,14 +98,17 @@ class AppointmentController extends Controller
             'status'           => 'pending',
         ]);
 
-        return response()->json($appointment->load('salon', 'service'), 201);
+        $appointment->load('client', 'service');
+        $service->salon->user->notify(new AppointmentBooked($appointment));
+
+        return new AppointmentResource($appointment->load('salon', 'service'));
     }
 
     public function show(Request $request, Appointment $appointment)
     {
         abort_unless($appointment->client_id === $request->user()->id, 403);
 
-        return response()->json($appointment->load('salon', 'service'));
+        return new AppointmentResource($appointment->load('salon', 'service'));
     }
 
     public function cancel(Request $request, Appointment $appointment)
@@ -101,6 +118,6 @@ class AppointmentController extends Controller
 
         $appointment->update(['status' => 'cancelled']);
 
-        return response()->json($appointment->load('salon', 'service'));
+        return new AppointmentResource($appointment->load('salon', 'service'));
     }
 }

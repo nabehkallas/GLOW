@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .bg-prima-dark   { background-color: #263238; }
+  .text-prima-dark { color: #263238; }
+  .bg-prima-light  { background-color: #f4f6f5; }
+  .bg-prima-orange { background-color: #e8481c; }
+  .text-prima-orange { color: #e8481c; }
+  .bg-prima-green  { background-color: #2db563; }
+  .text-prima-green { color: #2db563; }
+  .border-prima-green { border-color: #2db563; }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #f4f6f5; }

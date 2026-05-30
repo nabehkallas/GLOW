@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ReviewResource;
 use App\Models\Appointment;
 use App\Models\Review;
 use App\Models\Salon;
@@ -31,7 +32,7 @@ class ReviewController extends Controller
             'comment'        => $data['comment'] ?? null,
         ]);
 
-        return response()->json($review->load('client:id,name', 'appointment'), 201);
+        return new ReviewResource($review->load('client', 'appointment'));
     }
 
     public function index(Request $request, Salon $salon)
@@ -39,25 +40,25 @@ class ReviewController extends Controller
         abort_unless($salon->status === 'approved', 404);
 
         $reviews = $salon->reviews()
-            ->with('client:id,name', 'appointment:id,scheduled_at')
+            ->with('client', 'appointment')
             ->latest()
             ->paginate(15);
 
         return response()->json([
             'average_rating' => $salon->average_rating,
             'reviews_count'  => $salon->reviews_count,
-            'reviews'        => $reviews,
+            'reviews'        => ReviewResource::collection($reviews),
         ]);
     }
 
     public function myReviews(Request $request)
     {
         $reviews = Review::where('client_id', $request->user()->id)
-            ->with('salon:id,name,city', 'appointment:id,scheduled_at')
+            ->with('salon', 'appointment')
             ->latest()
             ->paginate(15);
 
-        return response()->json($reviews);
+        return ReviewResource::collection($reviews);
     }
 
     public function destroy(Request $request, Review $review)

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\SalonMediaResource;
+use App\Http\Resources\SalonResource;
 use App\Models\Salon;
 use Illuminate\Http\Request;
 
@@ -24,18 +26,17 @@ class SalonController extends Controller
         $hasLocation = $request->filled('lat') && $request->filled('lng');
 
         $salons = $salons->map(function (Salon $salon) use ($request, $hasLocation) {
-            $data = $salon->toArray();
-            $data['distance_km'] = $hasLocation
+            $salon->distance_km = $hasLocation
                 ? $salon->distanceFrom((float) $request->lat, (float) $request->lng)
                 : null;
-            return $data;
+            return $salon;
         });
 
         if ($hasLocation) {
             $salons = $salons->sortBy('distance_km')->values();
         }
 
-        return response()->json($salons);
+        return SalonResource::collection($salons);
     }
 
     public function show(Request $request, Salon $salon)
@@ -47,11 +48,24 @@ class SalonController extends Controller
             'lng' => 'nullable|numeric|between:-180,180',
         ]);
 
-        $data = $salon->load('services')->toArray();
-        $data['distance_km'] = ($request->filled('lat') && $request->filled('lng'))
+        $salon->loadMissing('services', 'workingHours', 'user');
+
+        $salon->distance_km = ($request->filled('lat') && $request->filled('lng'))
             ? $salon->distanceFrom((float) $request->lat, (float) $request->lng)
             : null;
 
-        return response()->json($data);
+        return new SalonResource($salon);
+    }
+
+    public function media(Salon $salon)
+    {
+        abort_unless($salon->status === 'approved', 404);
+
+        $media = $salon->media()
+            ->orderBy('sort_order')
+            ->orderBy('created_at')
+            ->get();
+
+        return SalonMediaResource::collection($media);
     }
 }

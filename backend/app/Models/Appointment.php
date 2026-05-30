@@ -12,6 +12,8 @@ class Appointment extends Model
         'salon_service_id',
         'scheduled_at',
         'status',
+        'source',
+        'client_name',
         'notes',
         'price_at_booking',
     ];

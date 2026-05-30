@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Salon;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\WorkingHourResource;
 use App\Models\WorkingHour;
 use Illuminate\Http\Request;
 
@@ -10,18 +11,11 @@ class WorkingHoursController extends Controller
 {
     public function index(Request $request)
     {
-        $hours = $request->user()->salon
-            ->workingHours()
-            ->get()
-            ->map(fn($wh) => array_merge($wh->toArray(), ['day_name' => $wh->day_name]));
-
-        return response()->json($hours);
+        return WorkingHourResource::collection(
+            $request->user()->salon->workingHours()->get()
+        );
     }
 
-    /**
-     * Upsert the full weekly schedule in one call.
-     * Expects an array of 7 day entries.
-     */
     public function upsert(Request $request)
     {
         $request->validate([
@@ -45,15 +39,9 @@ class WorkingHoursController extends Controller
             );
         }
 
-        $hours = $salon->workingHours()->get()
-            ->map(fn($wh) => array_merge($wh->toArray(), ['day_name' => $wh->day_name]));
-
-        return response()->json($hours);
+        return WorkingHourResource::collection($salon->workingHours()->get());
     }
 
-    /**
-     * Update a single day.
-     */
     public function update(Request $request, int $dayOfWeek)
     {
         abort_if($dayOfWeek < 0 || $dayOfWeek > 6, 422, 'day_of_week must be between 0 and 6.');
@@ -75,6 +63,6 @@ class WorkingHoursController extends Controller
             ]
         );
 
-        return response()->json(array_merge($wh->toArray(), ['day_name' => $wh->day_name]));
+        return new WorkingHourResource($wh);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Salon;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\SalonServiceResource;
 use App\Models\SalonService;
 use Illuminate\Http\Request;
 
@@ -10,9 +11,9 @@ class ServiceController extends Controller
 {
     public function index(Request $request)
     {
-        $services = $request->user()->salon->services()->latest()->get();
-
-        return response()->json($services);
+        return SalonServiceResource::collection(
+            $request->user()->salon->services()->latest()->get()
+        );
     }
 
     public function store(Request $request)
@@ -23,18 +24,20 @@ class ServiceController extends Controller
             'price'            => 'required|numeric|min:0',
             'duration_minutes' => 'required|integer|min:5',
             'category'         => 'nullable|string|max:100',
+            'available_from'   => 'nullable|date_format:H:i',
+            'available_until'  => 'nullable|date_format:H:i|after:available_from',
         ]);
 
-        $service = $request->user()->salon->services()->create($data);
-
-        return response()->json($service, 201);
+        return new SalonServiceResource(
+            $request->user()->salon->services()->create($data)
+        );
     }
 
     public function show(Request $request, SalonService $service)
     {
         $this->authorizeSalonOwnership($request, $service);
 
-        return response()->json($service);
+        return new SalonServiceResource($service);
     }
 
     public function update(Request $request, SalonService $service)
@@ -47,12 +50,14 @@ class ServiceController extends Controller
             'price'            => 'sometimes|numeric|min:0',
             'duration_minutes' => 'sometimes|integer|min:5',
             'category'         => 'nullable|string|max:100',
+            'available_from'   => 'nullable|date_format:H:i',
+            'available_until'  => 'nullable|date_format:H:i|after:available_from',
             'is_active'        => 'boolean',
         ]);
 
         $service->update($data);
 
-        return response()->json($service);
+        return new SalonServiceResource($service);
     }
 
     public function destroy(Request $request, SalonService $service)

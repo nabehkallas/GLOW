@@ -13,6 +13,9 @@ class SalonService extends Model
         'price',
         'duration_minutes',
         'category',
+        'image',
+        'available_from',
+        'available_until',
         'is_active',
     ];
 
