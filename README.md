@@ -22,7 +22,7 @@
 <table>
   <tr>
     <td align="center"><img src="screenshots/Client-1.png" width="200"/><br/><sub>Explore</sub></td>
-    <td align="center"><img src="screenshots/Client-3.png" width="200"/><br/><sub>Salon Detail</sub></td>
+    <td align="center"><img src="screenshots/client-3.png" width="200"/><br/><sub>Salon Detail</sub></td>
     <td align="center"><img src="screenshots/Client-2.png" width="200"/><br/><sub>My Appointments</sub></td>
     <td align="center"><img src="screenshots/Client-4.png" width="200"/><br/><sub>Notifications</sub></td>
   </tr>
