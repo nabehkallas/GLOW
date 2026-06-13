@@ -56,25 +56,28 @@ export default function RegisterScreen({ navigation }) {
   ];
 
   return (
-    <View style={s.root}>
+    <KeyboardAvoidingView
+      style={s.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <StatusBar style="light" />
-
-      <View style={s.top}>
-        <SafeAreaView edges={['top']} style={s.topSafe}>
-          <View style={s.langWrap}>
-            <LanguageToggle />
-          </View>
-          <View style={s.logoWrap}>
-            <Image source={logo} style={s.logo} resizeMode="contain" />
-          </View>
-        </SafeAreaView>
-      </View>
-
-      <KeyboardAvoidingView
-        style={s.formWrap}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      <ScrollView
+        contentContainerStyle={s.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+        <View style={s.top}>
+          <SafeAreaView edges={['top']} style={s.topSafe}>
+            <View style={s.langWrap}>
+              <LanguageToggle />
+            </View>
+            <View style={s.logoWrap}>
+              <Image source={logo} style={s.logo} resizeMode="contain" />
+            </View>
+          </SafeAreaView>
+        </View>
+
+        <View style={s.formWrap}>
           <View style={s.card}>
             <Text style={s.title}>{t('auth.register')}</Text>
             <Text style={s.subtitle}>{t('auth.startBooking')}</Text>
@@ -117,14 +120,16 @@ export default function RegisterScreen({ navigation }) {
               <Text style={s.secondaryBtnText}>{t('auth.login')}</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.dark },
+
+  scroll: { flexGrow: 1 },
 
   top: {
     height: height * 0.28,
@@ -145,13 +150,12 @@ const s = StyleSheet.create({
   logo: { width: '100%', height: 330 },
 
   formWrap: {
-    flex: 1,
     backgroundColor: colors.background,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    overflow: 'hidden',
+    minHeight: height * 0.72,
+    padding: spacing.lg,
   },
-  scroll: { flexGrow: 1, padding: spacing.lg },
   card: { paddingTop: spacing.sm },
   title: { fontSize: 26, fontWeight: '800', color: colors.dark, textAlign: 'right', marginBottom: 4 },
   subtitle: { fontSize: 14, color: colors.textMuted, textAlign: 'right', marginBottom: spacing.lg },

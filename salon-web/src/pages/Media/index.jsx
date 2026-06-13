@@ -83,7 +83,7 @@ export default function Media() {
         <input
           ref={fileRef}
           type="file"
-          accept="image/*,video/*"
+          accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime"
           className="hidden"
           onChange={(e) => handleFiles(e.target.files)}
         />
