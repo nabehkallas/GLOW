@@ -216,6 +216,14 @@ Queue worker sends DB notification + Expo Push to client
 
 ---
 
+## Live Demo
+
+| Panel | URL | Email | Password |
+|---|---|---|---|
+| Admin Panel | [glow-wbqw.vercel.app](https://glow-wbqw.vercel.app) | admin@glow.com | password |
+
+---
+
 ## License
 
 Private — all rights reserved.
