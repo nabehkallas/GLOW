@@ -44,11 +44,10 @@ class ReviewController extends Controller
             ->latest()
             ->paginate(15);
 
-        return response()->json([
+        return ReviewResource::collection($reviews)->additional(['meta' => [
             'average_rating' => $salon->average_rating,
             'reviews_count'  => $salon->reviews_count,
-            'reviews'        => ReviewResource::collection($reviews),
-        ]);
+        ]]);
     }
 
     public function myReviews(Request $request)

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../components/Layout'
 import {
   getCashierSummary,
@@ -10,25 +11,20 @@ import {
 } from '../../api/cashier'
 
 function fmt(n) {
-  return Number(n).toLocaleString('ar-SY') + ' ل.س'
+  return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-const CATEGORY_LABELS = {
-  appointment: 'Appointment', product_sale: 'Product Sale', tip: 'Tip',
-  supplies: 'Supplies', rent: 'Rent', salaries: 'Salaries',
-  utilities: 'Utilities', maintenance: 'Maintenance', other: 'Other',
-}
-
-const IN_CATS  = ['appointment', 'product_sale', 'tip', 'other']
+const IN_CATS  = ['product_sale', 'tip', 'other']
 const OUT_CATS = ['supplies', 'rent', 'salaries', 'utilities', 'maintenance', 'other']
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10)
 }
 
-const EMPTY_FORM = { salon_id: '', type: 'in', category: 'appointment', amount: '', note: '', date: todayStr() }
+const EMPTY_FORM = { type: 'in', category: 'product_sale', amount: '', note: '', date: todayStr() }
 
 export default function Cashier() {
+  const { t } = useTranslation()
   const [salons, setSalons]       = useState([])
   const [summary, setSummary]     = useState(null)
   const [breakdown, setBreakdown] = useState([])
@@ -91,8 +87,7 @@ export default function Cashier() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.salon_id) { setFormError('Please select a salon.'); return }
-    if (!form.amount || Number(form.amount) <= 0) { setFormError('Enter a valid amount.'); return }
+    if (!form.amount || Number(form.amount) <= 0) { setFormError(t('cashier.form.validationAmount')); return }
     setSaving(true); setFormError('')
     try {
       const tx = await createTransaction({ ...form, amount: Number(form.amount) })
@@ -100,14 +95,14 @@ export default function Cashier() {
       setShowForm(false)
       load() // refresh summary + breakdown
     } catch {
-      setFormError('Failed to save. Try again.')
+      setFormError(t('cashier.form.saveFailed'))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this transaction?')) return
+    if (!window.confirm(t('cashier.table.deleteConfirm'))) return
     setDeletingId(id)
     try {
       await deleteTransaction(id)
@@ -128,40 +123,40 @@ export default function Cashier() {
 
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-prima-dark">Cashier Overview</h1>
+          <h1 className="text-2xl font-bold text-prima-dark">{t('cashier.title')}</h1>
           <button
             onClick={openForm}
             className="bg-prima-orange hover:bg-orange-600 text-white font-semibold px-5 py-2.5 rounded-xl shadow transition-colors text-sm"
           >
-            + Add Transaction
+            {t('cashier.addTransaction')}
           </button>
         </div>
 
         {/* Filters */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <div className="flex flex-wrap gap-4 items-end">
-            <Field label="Salon">
+            <Field label={t('cashier.filters.salon')}>
               <select value={salonId} onChange={(e) => setSalonId(e.target.value)} className={selectCls}>
-                <option value="">All Salons</option>
-                {salons.map((s) => <option key={s.id} value={s.id}>{s.salon_name}</option>)}
+                <option value="">{t('cashier.filters.allSalons')}</option>
+                {salons.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </Field>
-            <Field label="Type">
+            <Field label={t('cashier.filters.type')}>
               <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className={selectCls}>
-                <option value="">All</option>
-                <option value="in">Cash In</option>
-                <option value="out">Cash Out</option>
+                <option value="">{t('common.all')}</option>
+                <option value="in">{t('cashier.filters.cashIn')}</option>
+                <option value="out">{t('cashier.filters.cashOut')}</option>
               </select>
             </Field>
-            <Field label="From">
+            <Field label={t('cashier.filters.from')}>
               <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className={inputCls} />
             </Field>
-            <Field label="To">
+            <Field label={t('cashier.filters.to')}>
               <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className={inputCls} />
             </Field>
             {hasFilters && (
               <button onClick={clearFilters} className="text-xs text-gray-400 hover:text-prima-dark underline pb-2">
-                Clear filters
+                {t('cashier.filters.clear')}
               </button>
             )}
           </div>
@@ -169,14 +164,14 @@ export default function Cashier() {
 
         {/* Summary cards */}
         <div className="grid grid-cols-3 gap-4">
-          <SummaryCard label="Total Cash In"  value={summary ? fmt(summary.total_in)  : '—'} icon="↑" color="text-prima-green" bg="bg-green-50"  border="border-prima-green/20" />
-          <SummaryCard label="Total Cash Out" value={summary ? fmt(summary.total_out) : '—'} icon="↓" color="text-red-500"     bg="bg-red-50"    border="border-red-200" />
-          <SummaryCard label="Net Balance"    value={summary ? fmt(summary.net)        : '—'} icon="=" color={summary && summary.net >= 0 ? 'text-prima-dark' : 'text-red-600'} bg="bg-slate-50" border="border-slate-200" />
+          <SummaryCard label={t('cashier.summary.totalCashIn')}  value={summary ? fmt(summary.total_in)  : '—'} icon="↑" color="text-prima-green" bg="bg-green-50"  border="border-prima-green/20" />
+          <SummaryCard label={t('cashier.summary.totalCashOut')} value={summary ? fmt(summary.total_out) : '—'} icon="↓" color="text-red-500"     bg="bg-red-50"    border="border-red-200" />
+          <SummaryCard label={t('cashier.summary.netBalance')}   value={summary ? fmt(summary.net)        : '—'} icon="=" color={summary && summary.net >= 0 ? 'text-prima-dark' : 'text-red-600'} bg="bg-slate-50" border="border-slate-200" />
         </div>
 
         {/* Tabs */}
         <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
-          {[['breakdown', 'Per-Salon Breakdown'], ['transactions', 'All Transactions']].map(([key, label]) => (
+          {[['breakdown', t('cashier.tabs.breakdown')], ['transactions', t('cashier.tabs.transactions')]].map(([key, label]) => (
             <button
               key={key}
               onClick={() => setTab(key)}
@@ -189,7 +184,7 @@ export default function Cashier() {
 
         {/* Content */}
         {loading ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center text-gray-400 text-sm">Loading…</div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center text-gray-400 text-sm">{t('common.loading')}</div>
         ) : tab === 'breakdown' ? (
           <BreakdownTable data={breakdown} />
         ) : (
@@ -202,24 +197,11 @@ export default function Cashier() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-prima-dark text-lg">Add Transaction</h2>
+              <h2 className="font-bold text-prima-dark text-lg">{t('cashier.form.title')}</h2>
               <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-prima-dark w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">✕</button>
             </div>
 
             <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-
-              {/* Salon */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1.5">Salon</label>
-                <select
-                  value={form.salon_id}
-                  onChange={(e) => setForm((f) => ({ ...f, salon_id: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-prima-dark text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40"
-                >
-                  <option value="">Select salon…</option>
-                  {salons.map((s) => <option key={s.id} value={s.id}>{s.salon_name}</option>)}
-                </select>
-              </div>
 
               {/* Type toggle */}
               <div className="flex gap-3">
@@ -236,26 +218,26 @@ export default function Cashier() {
                         : 'border-gray-200 text-gray-400 hover:border-gray-300'
                     }`}
                   >
-                    {tp === 'in' ? '↑ Cash In' : '↓ Cash Out'}
+                    {tp === 'in' ? t('cashier.form.cashIn') : t('cashier.form.cashOut')}
                   </button>
                 ))}
               </div>
 
               {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1.5">Category</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1.5">{t('cashier.form.category')}</label>
                 <select
                   value={form.category}
                   onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                   className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-prima-dark text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40"
                 >
-                  {cats.map((c) => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
+                  {cats.map((c) => <option key={c} value={c}>{t(`cashier.categories.${c}`)}</option>)}
                 </select>
               </div>
 
               {/* Amount */}
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1.5">Amount (ل.س)</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1.5">{t('cashier.form.amount')}</label>
                 <input
                   type="number" min="0" step="0.01"
                   value={form.amount}
@@ -267,7 +249,7 @@ export default function Cashier() {
 
               {/* Date */}
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1.5">Date</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1.5">{t('cashier.form.date')}</label>
                 <input
                   type="date"
                   value={form.date}
@@ -278,12 +260,12 @@ export default function Cashier() {
 
               {/* Note */}
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1.5">Note <span className="text-gray-400 font-normal">(optional)</span></label>
+                <label className="block text-sm font-medium text-gray-600 mb-1.5">{t('cashier.form.note')} <span className="text-gray-400 font-normal">({t('common.optional')})</span></label>
                 <textarea
                   value={form.note}
                   onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
                   rows={2}
-                  placeholder="Optional note…"
+                  placeholder={t('cashier.form.notePlaceholder')}
                   className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-prima-dark text-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-400/40"
                 />
               </div>
@@ -292,10 +274,10 @@ export default function Cashier() {
 
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setShowForm(false)} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl font-medium text-sm hover:bg-gray-50 transition-colors">
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" disabled={saving} className="flex-1 bg-prima-orange hover:bg-orange-600 text-white py-2.5 rounded-xl font-semibold text-sm disabled:opacity-60 transition-colors shadow">
-                  {saving ? 'Saving…' : 'Save'}
+                  {saving ? t('common.saving') : t('common.save')}
                 </button>
               </div>
             </form>
@@ -327,34 +309,35 @@ function SummaryCard({ label, value, icon, color, bg, border }) {
 }
 
 function BreakdownTable({ data }) {
-  if (!data.length) return <EmptyState icon="💵" text="No transactions recorded yet." />
+  const { t } = useTranslation()
+  if (!data.length) return <EmptyState icon="💵" text={t('cashier.table.noBreakdown')} />
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <table className="w-full text-sm">
         <thead className="bg-gray-50 border-b border-gray-100">
           <tr>
-            <Th>Salon</Th>
-            <Th right>Cash In</Th>
-            <Th right>Cash Out</Th>
-            <Th right>Net</Th>
+            <Th>{t('cashier.table.salon')}</Th>
+            <Th right>{t('cashier.filters.cashIn')}</Th>
+            <Th right>{t('cashier.filters.cashOut')}</Th>
+            <Th right>{t('cashier.summary.netBalance')}</Th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
           {data.map((row) => (
             <tr key={row.salon_id} className="hover:bg-gray-50/60 transition-colors">
               <td className="px-5 py-3.5 font-semibold text-prima-dark">{row.salon_name}</td>
-              <td className="px-5 py-3.5 text-right font-bold text-prima-green">{fmt(row.total_in)}</td>
-              <td className="px-5 py-3.5 text-right font-bold text-red-500">-{fmt(row.total_out)}</td>
-              <td className={`px-5 py-3.5 text-right font-black ${row.net >= 0 ? 'text-prima-dark' : 'text-red-600'}`}>{fmt(row.net)}</td>
+              <td className="px-5 py-3.5 text-end font-bold text-prima-green">{fmt(row.total_in)}</td>
+              <td className="px-5 py-3.5 text-end font-bold text-red-500">-{fmt(row.total_out)}</td>
+              <td className={`px-5 py-3.5 text-end font-black ${row.net >= 0 ? 'text-prima-dark' : 'text-red-600'}`}>{fmt(row.net)}</td>
             </tr>
           ))}
         </tbody>
         <tfoot className="bg-prima-dark/5 border-t-2 border-prima-dark/10">
           <tr>
-            <td className="px-5 py-3 text-xs font-bold text-prima-dark uppercase">Total</td>
-            <td className="px-5 py-3 text-right font-black text-prima-green text-sm">{fmt(data.reduce((s, r) => s + r.total_in, 0))}</td>
-            <td className="px-5 py-3 text-right font-black text-red-500 text-sm">-{fmt(data.reduce((s, r) => s + r.total_out, 0))}</td>
-            <td className="px-5 py-3 text-right font-black text-prima-dark text-sm">{fmt(data.reduce((s, r) => s + r.net, 0))}</td>
+            <td className="px-5 py-3 text-xs font-bold text-prima-dark uppercase">{t('cashier.table.total')}</td>
+            <td className="px-5 py-3 text-end font-black text-prima-green text-sm">{fmt(data.reduce((s, r) => s + r.total_in, 0))}</td>
+            <td className="px-5 py-3 text-end font-black text-red-500 text-sm">-{fmt(data.reduce((s, r) => s + r.total_out, 0))}</td>
+            <td className="px-5 py-3 text-end font-black text-prima-dark text-sm">{fmt(data.reduce((s, r) => s + r.net, 0))}</td>
           </tr>
         </tfoot>
       </table>
@@ -363,32 +346,33 @@ function BreakdownTable({ data }) {
 }
 
 function TransactionTable({ rows, deletingId, onDelete }) {
-  if (!rows.length) return <EmptyState icon="🧾" text="No transactions found for the selected filters." />
+  const { t } = useTranslation()
+  if (!rows.length) return <EmptyState icon="🧾" text={t('cashier.table.noTransactions')} />
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <table className="w-full text-sm">
         <thead className="bg-gray-50 border-b border-gray-100">
           <tr>
-            <Th>Salon</Th>
-            <Th>Type</Th>
-            <Th>Category</Th>
-            <Th right>Amount</Th>
-            <Th>Note</Th>
-            <Th>Date</Th>
+            <Th>{t('cashier.table.salon')}</Th>
+            <Th>{t('cashier.table.type')}</Th>
+            <Th>{t('cashier.table.category')}</Th>
+            <Th right>{t('cashier.table.amount')}</Th>
+            <Th>{t('cashier.table.note')}</Th>
+            <Th>{t('cashier.table.date')}</Th>
             <Th />
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
           {rows.map((row) => (
             <tr key={row.id} className="hover:bg-gray-50/60 transition-colors">
-              <td className="px-5 py-3 font-medium text-prima-dark">{row.salon?.salon_name ?? '—'}</td>
+              <td className="px-5 py-3 font-medium text-prima-dark">{row.salon?.name ?? '—'}</td>
               <td className="px-5 py-3">
                 <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${row.type === 'in' ? 'bg-green-100 text-prima-green' : 'bg-red-100 text-red-600'}`}>
-                  {row.type === 'in' ? '↑ In' : '↓ Out'}
+                  {row.type === 'in' ? t('cashier.table.in') : t('cashier.table.out')}
                 </span>
               </td>
-              <td className="px-5 py-3 text-gray-600">{CATEGORY_LABELS[row.category] ?? row.category}</td>
-              <td className={`px-5 py-3 text-right font-bold ${row.type === 'in' ? 'text-prima-green' : 'text-red-500'}`}>
+              <td className="px-5 py-3 text-gray-600">{t(`cashier.categories.${row.category}`, { defaultValue: row.category })}</td>
+              <td className={`px-5 py-3 text-end font-bold ${row.type === 'in' ? 'text-prima-green' : 'text-red-500'}`}>
                 {row.type === 'out' ? '-' : '+'}{fmt(row.amount)}
               </td>
               <td className="px-5 py-3 text-gray-400 max-w-[180px] truncate">{row.note || '—'}</td>
@@ -398,7 +382,7 @@ function TransactionTable({ rows, deletingId, onDelete }) {
                   onClick={() => onDelete(row.id)}
                   disabled={deletingId === row.id}
                   className="text-gray-300 hover:text-red-500 transition-colors disabled:opacity-40 text-sm"
-                  title="Delete"
+                  title={t('cashier.table.delete')}
                 >
                   {deletingId === row.id ? '…' : '✕'}
                 </button>
@@ -413,7 +397,7 @@ function TransactionTable({ rows, deletingId, onDelete }) {
 
 function Th({ children, right }) {
   return (
-    <th className={`px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide ${right ? 'text-right' : 'text-left'}`}>
+    <th className={`px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide ${right ? 'text-end' : 'text-start'}`}>
       {children}
     </th>
   )

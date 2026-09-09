@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\Salon;
 use App\Models\User;
+use App\Notifications\NewSalonPendingApproval;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
@@ -42,8 +44,8 @@ class AuthController extends Controller
             'city'           => 'required|string|max:100',
             'license_number' => 'nullable|string|max:100',
             'description'    => 'nullable|string',
-            'latitude'       => 'nullable|numeric|between:-90,90',
-            'longitude'      => 'nullable|numeric|between:-180,180',
+            'latitude'       => 'required|numeric|between:-90,90',
+            'longitude'      => 'required|numeric|between:-180,180',
         ]);
 
         $user = User::create([
@@ -54,17 +56,19 @@ class AuthController extends Controller
             'role'     => 'salon',
         ]);
 
-        Salon::create([
+        $salon = Salon::create([
             'user_id'        => $user->id,
             'name'           => $data['salon_name'],
             'address'        => $data['address'],
             'city'           => $data['city'],
-            'latitude'       => $data['latitude'] ?? null,
-            'longitude'      => $data['longitude'] ?? null,
+            'latitude'       => $data['latitude'],
+            'longitude'      => $data['longitude'],
             'license_number' => $data['license_number'] ?? null,
             'description'    => $data['description'] ?? null,
             'status'         => 'pending',
         ]);
+
+        Notification::send(User::where('role', 'admin')->get(), new NewSalonPendingApproval($salon));
 
         return response()->json([
             'message' => 'Registration submitted. Awaiting admin approval.',
@@ -98,7 +102,10 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        $user->currentAccessToken()->delete();
+        $user->update(['expo_push_token' => null]);
+        $user->pushSubscriptions()->delete();
 
         return response()->json(['message' => 'Logged out successfully.']);
     }
@@ -113,5 +120,12 @@ class AuthController extends Controller
         $request->validate(['token' => 'required|string|max:255']);
         $request->user()->update(['expo_push_token' => $request->token]);
         return response()->json(['message' => 'Push token updated.']);
+    }
+
+    public function updateLocale(Request $request)
+    {
+        $request->validate(['locale' => 'required|in:ar,en']);
+        $request->user()->update(['locale' => $request->locale]);
+        return response()->json(['message' => 'Locale updated.']);
     }
 }

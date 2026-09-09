@@ -7,6 +7,7 @@
     "add": "إضافة",
     "loading": "جارٍ التحميل...",
     "saving": "جارٍ الحفظ...",
+    "recentSearches": "عمليات البحث الأخيرة",
     "placing": "جارٍ التقديم...",
     "confirm": "تأكيد",
     "complete": "إكمال",
@@ -21,7 +22,8 @@
     "service": "الخدمة",
     "source": "المصدر",
     "notes": "الملاحظات",
-    "optional": "اختياري"
+    "optional": "اختياري",
+    "all": "الكل"
   },
   "lang": {
     "switch": "English",
@@ -42,21 +44,27 @@
     "completed": "مكتمل",
     "cancelled": "ملغى",
     "shipped": "تم الشحن",
-    "delivered": "تم التسليم"
+    "delivered": "تم التسليم",
+    "failed": "فشل التسليم",
+    "returned": "مرتجع",
+    "cancellation_requested": "طلب إلغاء",
+    "return_requested": "طلب إرجاع"
   },
   "nav": {
     "dashboard": "لوحة التحكم",
     "appointments": "المواعيد",
     "services": "الخدمات",
     "orders": "الطلبات",
+    "history": "السجل",
     "workingHours": "ساعات العمل",
     "reviews": "التقييمات",
     "analytics": "الإحصائيات",
     "clients": "العملاء",
     "media": "الوسائط",
+    "balance": "الرصيد",
     "profile": "الملف الشخصي",
-    "logout": "تسجيل الخروج",
-    "cashier": "الكاشير"
+    "settings": "الإعدادات",
+    "logout": "تسجيل الخروج"
   },
   "auth": {
     "signIn": "تسجيل الدخول",
@@ -72,6 +80,7 @@
     "phone": "رقم الهاتف",
     "syrianNumber": "رقم سوري",
     "phoneError": "أدخل رقم هاتف سوري صحيح (مثال: 0991234567)",
+    "locationRequired": "الرجاء تحديد موقع الصالون على الخريطة أو استخدام GPS.",
     "pleaseWait": "الرجاء الانتظار...",
     "registerAwaitApproval": "تسجيل وانتظار الموافقة",
     "pendingNote": "بعد التسجيل، سيتم مراجعة حسابك من قبل الإدارة قبل التمكن من الوصول إلى لوحة التحكم.",
@@ -100,7 +109,14 @@
     "markAllRead": "تعليم الكل كمقروء",
     "loading": "جارٍ التحميل...",
     "empty": "لا توجد إشعارات بعد.",
-    "new": "إشعار جديد"
+    "new": "إشعار جديد",
+    "messages": {
+      "appointment_booked": "حجز جديد: {{clientName}} — {{serviceName}}",
+      "appointment_status_changed": "موعدك لـ {{serviceName}} أصبح الآن {{status}}.",
+      "order_status_changed": "الطلب رقم {{id}} أصبح الآن {{status}}.",
+      "salon_approved": "تمت الموافقة على صالونك {{name}}.",
+      "salon_rejected": "لم تتم الموافقة على صالونك {{name}}: {{reason}}"
+    }
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -111,11 +127,13 @@
     "topServices": "أفضل الخدمات",
     "busiestDays": "أكثر الأيام ازدحامًا",
     "recentAppointments": "المواعيد الأخيرة",
+    "recentOrders": "الطلبات الأخيرة",
+    "viewAll": "عرض الكل",
     "date": "التاريخ"
   },
   "appointments": {
     "title": "المواعيد",
-    "addWalkIn": "+ عميل مباشر",
+    "addEntry": "+ إضافة",
     "noAppointments": "لا توجد مواعيد {{status}}.",
     "scheduledAt": "الموعد المحدد",
     "walkInBadge": "عميل مباشر",
@@ -123,6 +141,11 @@
     "addWalkInTitle": "إضافة موعد مباشر",
     "clientName": "اسم العميل",
     "clientPlaceholder": "اسم العميل المباشر",
+    "clientPhone": "رقم الهاتف",
+    "clientPhonePlaceholder": "09XXXXXXXX",
+    "dateFrom": "من تاريخ",
+    "dateTo": "إلى تاريخ",
+    "clearDates": "مسح التواريخ",
     "selectService": "اختر خدمة...",
     "other": "أخرى",
     "duration": "المدة",
@@ -130,7 +153,13 @@
     "optionalNotes": "ملاحظات اختيارية",
     "addAppointment": "إضافة الموعد",
     "failedToAdd": "فشل إضافة الموعد.",
-    "min": "د"
+    "completeTitle": "إكمال الموعد",
+    "completeFailed": "فشل إكمال الموعد.",
+    "cancellationReason": "سبب الإلغاء",
+    "approveCancellation": "موافقة",
+    "denyCancellation": "الإبقاء",
+    "min": "د",
+    "searchPlaceholder": "ابحث باسم العميل أو رقم الهاتف..."
   },
   "services": {
     "title": "الخدمات",
@@ -154,15 +183,32 @@
     "address": "العنوان",
     "city": "المدينة",
     "phone": "رقم الهاتف",
-    "latitude": "خط العرض",
-    "longitude": "خط الطول",
+    "location": "الموقع",
+    "trackLocation": "تتبّع موقعي",
+    "tracking": "جارٍ التتبّع…",
+    "locationNotSet": "لم يتم تحديد الموقع",
+    "locationError": "تعذّر تحديد موقعك. يرجى السماح بالوصول للموقع والمحاولة مجدداً.",
+    "locationUnsupported": "متصفحك لا يدعم تتبّع الموقع.",
     "capacity": "المقاعد / الطاقة الاستيعابية",
     "capacityHint": "عدد العملاء الذين يمكن خدمتهم في نفس الوقت",
     "saveChanges": "حفظ التغييرات",
     "salonLogo": "صورة الصالون",
     "logoHint": "JPG أو PNG أو WebP — حد أقصى 2 ميغابايت",
     "changeLogo": "تغيير الصورة",
-    "logoFailed": "فشل رفع الصورة، حاول مجدداً."
+    "logoFailed": "فشل رفع الصورة، حاول مجدداً.",
+    "productsOrdered": "المنتجات المطلوبة",
+    "noProductsOrdered": "لم تقم بطلب أي منتجات بعد."
+  },
+  "settings": {
+    "comingSoon": "سيتم إضافة خيارات الإعدادات هنا قريباً.",
+    "balanceManagementTitle": "إدارة الرصيد",
+    "balanceManagementDescription": "تتبّع دخل ومصاريف صالونك في صفحة رصيد مخصصة.",
+    "saveFailed": "فشل الحفظ، حاول مجدداً."
+  },
+  "history": {
+    "title": "السجل",
+    "noAppointments": "لا توجد مواعيد في هذه الفترة.",
+    "noOrders": "لا توجد طلبات في هذه الفترة."
   },
   "workingHours": {
     "title": "ساعات العمل",
@@ -170,12 +216,35 @@
     "to": "إلى",
     "saveSchedule": "حفظ الجدول",
     "savedOk": "تم الحفظ بنجاح.",
-    "saveFailed": "فشل الحفظ."
+    "saveFailed": "فشل الحفظ.",
+    "grid": {
+      "title": "الجدول الأسبوعي",
+      "thisWeek": "هذا الأسبوع",
+      "legendBooked": "محجوز",
+      "legendFree": "متاح — اضغط للخيارات",
+      "legendClosed": "مغلق",
+      "goToAppointments": "الذهاب إلى المواعيد",
+      "choiceTitle": "ماذا تريد أن تفعل؟",
+      "choiceWalkIn": "إضافة موعد مباشر",
+      "choiceBlock": "حجب هذا الوقت",
+      "blockTitle": "حجب وقت",
+      "blockSubmit": "حجب",
+      "blockFailed": "فشل حجب هذا الوقت، حاول مجدداً.",
+      "blockNotePlaceholder": "السبب (اختياري)...",
+      "blockedTitle": "محجوب",
+      "removeBlock": "إزالة الحجب",
+      "blockScope": "ينطبق على",
+      "blockWholeSalon": "الصالون بالكامل",
+      "serviceRestrictedTooltip": "توجد خدمة أو أكثر محجوبة في هذا الوقت",
+      "serviceRestrictedTitle": "الخدمات المحجوبة"
+    }
   },
   "orders": {
     "shop": "المتجر",
     "myOrders": "طلباتي",
     "all": "الكل",
+    "onOfferFilter": "عروض خاصة",
+    "priceBreaksFilter": "خصومات الكمية",
     "noProducts": "لا توجد منتجات في هذه الفئة.",
     "outOfStock": "نفد المخزون",
     "onlyLeft": "متبقي {{count}} فقط",
@@ -187,7 +256,30 @@
     "orderPlaced": "تم تقديم الطلب بنجاح!",
     "each": "للقطعة",
     "items": "{{count}} منتج",
-    "stock": "المخزون"
+    "cancelOrder": "إلغاء الطلب",
+    "cancelConfirm": "هل أنت متأكد من إلغاء هذا الطلب؟",
+    "requestCancelConfirm": "هذا الطلب أصبح {{status}} بالفعل — سيحتاج المسؤول للموافقة على إلغائه.",
+    "cancelPending": "طلب الإلغاء الخاص بك قيد المراجعة.",
+    "cancelReason": "سبب الإلغاء",
+    "requestReturn": "طلب إرجاع",
+    "requestReturnConfirm": "هل تريد طلب إرجاع هذا الطلب؟ سيقوم المسؤول بمراجعة طلبك.",
+    "returnPending": "طلب الإرجاع الخاص بك قيد المراجعة.",
+    "returnReason": "سبب الإرجاع",
+    "searchPlaceholder": "ابحث عن منتج...",
+    "timeline": {
+      "pending": "بانتظار موافقة الإدارة",
+      "confirmed": "تمت الموافقة، جاري التجهيز",
+      "shipped": "الطلب في الطريق إليك",
+      "delivered": "تم التسليم بنجاح"
+    },
+    "stock": "المخزون",
+    "notes": "ملاحظات",
+    "notesPlaceholder": "أضف تعليقًا لهذا الطلب (اختياري)...",
+    "chooseOptions": "تصفح الخيارات",
+    "selectOptions": "اختر خيارًا لكل خاصية للمتابعة.",
+    "combinationOutOfStock": "هذه التركيبة غير متوفرة حاليًا.",
+    "saleTag": "تخفيض",
+    "tierHintLabel": "اشترِ أكثر ووفّر أكثر:"
   },
   "reviews": {
     "title": "التقييمات",
@@ -231,39 +323,6 @@
     "deleteConfirm": "هل تريد حذف هذا العنصر؟",
     "uploadFailed": "فشل الرفع."
   },
-  "cashier": {
-    "title": "الكاشير",
-    "addTransaction": "إضافة حركة",
-    "dailySummary": "ملخص اليوم",
-    "totalIn": "إجمالي الواردات",
-    "totalOut": "إجمالي الصادرات",
-    "net": "الرصيد الصافي",
-    "cashIn": "وارد",
-    "cashOut": "صادر",
-    "amount": "المبلغ",
-    "date": "التاريخ",
-    "type": "النوع",
-    "all": "الكل",
-    "filterType": "تصفية حسب النوع",
-    "from": "من",
-    "to": "إلى",
-    "clearFilters": "مسح الفلاتر",
-    "empty": "لا توجد حركات مالية بعد.",
-    "notePlaceholder": "ملاحظة اختيارية...",
-    "saveFailed": "فشل الحفظ، حاول مجدداً.",
-    "invalidAmount": "أدخل مبلغاً صحيحاً.",
-    "cat": {
-      "appointment": "دفع موعد",
-      "product_sale": "بيع منتج",
-      "tip": "إكرامية",
-      "other": "أخرى",
-      "supplies": "مستلزمات",
-      "rent": "إيجار",
-      "salaries": "رواتب",
-      "utilities": "مرافق",
-      "maintenance": "صيانة"
-    }
-  },
   "analytics": {
     "title": "الإحصائيات",
     "lastMonths": "آخر {{count}} أشهر",
@@ -271,6 +330,72 @@
     "monthlyAppointments": "المواعيد الشهرية",
     "topServices": "أفضل الخدمات",
     "bookings": "الحجوزات",
-    "revenue": "الإيرادات"
+    "revenue": "الإيرادات",
+    "totalAppointments": "إجمالي المواعيد",
+    "pendingAppointments": "قيد الانتظار",
+    "confirmedAppointments": "مؤكدة",
+    "cancelledAppointments": "ملغاة",
+    "thisMonthRevenue": "إيرادات هذا الشهر",
+    "totalOrders": "طلبات إعادة التزود",
+    "totalSpentOnProducts": "المصروف على المنتجات",
+    "busiestDays": "أكثر الأيام ازدحاماً",
+    "ordersSummary": "ملخص طلبات إعادة التزود",
+    "recentAppointments": "المواعيد الأخيرة",
+    "noRecentAppointments": "لا توجد مواعيد بعد.",
+    "count": "العدد"
+  },
+  "balance": {
+    "addTransaction": "+ إضافة معاملة",
+    "filters": {
+      "from": "من",
+      "to": "إلى",
+      "clear": "مسح",
+      "presets": {
+        "today": "اليوم",
+        "week": "هذا الأسبوع",
+        "month": "هذا الشهر",
+        "year": "هذه السنة",
+        "all": "كل الوقت"
+      }
+    },
+    "history": {
+      "title": "سجل الرصيد"
+    },
+    "summary": {
+      "totalIncome": "إجمالي الدخل",
+      "totalExpenses": "إجمالي المصاريف",
+      "netBalance": "الرصيد الصافي",
+      "breakdown": "يشمل {{appointments}} من المواعيد و{{manual}} مُدخلة يدوياً."
+    },
+    "categories": {
+      "product_sale": "بيع منتج",
+      "salaries": "رواتب",
+      "maintenance": "صيانة",
+      "supplies": "مستلزمات الصالون",
+      "other": "أخرى"
+    },
+    "form": {
+      "title": "إضافة معاملة",
+      "income": "دخل",
+      "expense": "مصروف",
+      "category": "الفئة",
+      "amount": "المبلغ",
+      "date": "التاريخ",
+      "comment": "ملاحظة",
+      "commentPlaceholder": "ملاحظة اختيارية...",
+      "validationAmount": "أدخل مبلغاً أكبر من 0.",
+      "saveFailed": "فشل الحفظ، حاول مجدداً."
+    },
+    "table": {
+      "type": "النوع",
+      "category": "الفئة",
+      "amount": "المبلغ",
+      "comment": "ملاحظة",
+      "date": "التاريخ",
+      "in": "دخل",
+      "out": "مصروف",
+      "noTransactions": "لا توجد معاملات بعد.",
+      "deleteConfirm": "إزالة هذه المعاملة؟"
+    }
   }
 }

@@ -10,7 +10,7 @@ class CashierController extends Controller
 {
     public function index(Request $request)
     {
-        $rows = CashTransaction::with('salon:id,salon_name')
+        $rows = CashTransaction::with('salon:id,name')
             ->when($request->salon_id, fn($q) => $q->where('salon_id', $request->salon_id))
             ->when($request->type,     fn($q) => $q->where('type', $request->type))
             ->when($request->date_from, fn($q) => $q->whereDate('date', '>=', $request->date_from))
@@ -45,7 +45,7 @@ class CashierController extends Controller
             ->when($request->date_from, fn($q) => $q->whereDate('date', '>=', $request->date_from))
             ->when($request->date_to,   fn($q) => $q->whereDate('date', '<=', $request->date_to))
             ->groupBy('salon_id', 'type')
-            ->with('salon:id,salon_name')
+            ->with('salon:id,name')
             ->get();
 
         // pivot into per-salon shape
@@ -55,7 +55,7 @@ class CashierController extends Controller
             if (!isset($salons[$id])) {
                 $salons[$id] = [
                     'salon_id'   => $id,
-                    'salon_name' => $row->salon->salon_name ?? '—',
+                    'salon_name' => $row->salon->name ?? '—',
                     'total_in'   => 0,
                     'total_out'  => 0,
                 ];
@@ -76,7 +76,7 @@ class CashierController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'salon_id' => 'required|exists:salons,id',
+            'salon_id' => 'nullable|exists:salons,id',
             'type'     => 'required|in:in,out',
             'category' => 'required|string|max:100',
             'amount'   => 'required|numeric|min:0.01',
@@ -85,7 +85,7 @@ class CashierController extends Controller
         ]);
 
         $tx = CashTransaction::create($data);
-        $tx->load('salon:id,salon_name');
+        $tx->load('salon:id,name');
 
         return response()->json(['data' => $tx], 201);
     }

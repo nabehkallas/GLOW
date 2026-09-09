@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Salon;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
+use App\Models\ScheduleBlock;
 use App\Models\SalonService;
 use App\Models\WorkingHour;
 use App\Notifications\AppointmentStatusChanged;
@@ -15,12 +16,27 @@ class AppointmentController extends Controller
 {
     public function index(Request $request)
     {
+        $request->validate([
+            'date_from' => 'nullable|date',
+            'date_to'   => 'nullable|date',
+        ]);
+
         $appointments = $request->user()->salon
             ->appointments()
             ->with('client', 'service')
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
+            ->when($request->status && $request->status !== 'all', fn($q) => $q->where('status', $request->status))
+            ->when($request->date_from, fn($q) => $q->whereDate('scheduled_at', '>=', $request->date_from))
+            ->when($request->date_to, fn($q) => $q->whereDate('scheduled_at', '<=', $request->date_to))
+            ->when($request->search, function ($q) use ($request) {
+                $term = $request->search;
+                $q->where(function ($q2) use ($term) {
+                    $q2->where('client_name', 'like', "%{$term}%")
+                        ->orWhere('client_phone', 'like', "%{$term}%")
+                        ->orWhereHas('client', fn($q3) => $q3->where('name', 'like', "%{$term}%")->orWhere('phone', 'like', "%{$term}%"));
+                });
+            })
             ->orderBy('scheduled_at')
-            ->paginate(15);
+            ->get();
 
         return AppointmentResource::collection($appointments);
     }
@@ -32,6 +48,7 @@ class AppointmentController extends Controller
             'duration_minutes' => 'nullable|integer|in:15,30,45,60,75,90,105,120,135,150,165,180',
             'scheduled_at'     => 'required|date',
             'client_name'      => 'required|string|max:255',
+            'client_phone'     => 'required|string|max:30',
             'notes'            => 'nullable|string|max:500',
         ]);
 
@@ -76,21 +93,35 @@ class AppointmentController extends Controller
                 ->whereDate('scheduled_at', $scheduledAt->toDateString())
                 ->get()
                 ->filter(function ($appt) use ($scheduledAt, $scheduledEnd) {
-                    if (!$appt->service) return false;
+                    $duration = $appt->service?->duration_minutes ?? $appt->duration_minutes;
+                    if (!$duration) return false;
                     $apptStart = Carbon::parse($appt->scheduled_at);
-                    $apptEnd   = $apptStart->copy()->addMinutes($appt->service->duration_minutes);
+                    $apptEnd   = $apptStart->copy()->addMinutes($duration);
                     return $scheduledAt->lt($apptEnd) && $scheduledEnd->gt($apptStart);
                 })
                 ->count();
 
             abort_if($overlappingCount >= $capacity, 422, 'This time slot is fully booked.');
+
+            $overlapsBlock = ScheduleBlock::where('salon_id', $salon->id)
+                ->whereDate('starts_at', $scheduledAt->toDateString())
+                ->where(fn($q) => $q->whereNull('salon_service_id')->orWhere('salon_service_id', $service?->id))
+                ->get()
+                ->contains(function ($block) use ($scheduledAt, $scheduledEnd) {
+                    $blockEnd = $block->starts_at->copy()->addMinutes($block->duration_minutes);
+                    return $scheduledAt->lt($blockEnd) && $scheduledEnd->gt($block->starts_at);
+                });
+
+            abort_if($overlapsBlock, 422, 'This time is unavailable.');
         }
 
         $appointment = Appointment::create([
             'salon_id'         => $salon->id,
             'salon_service_id' => $service?->id,
+            'duration_minutes' => $service ? null : ($data['duration_minutes'] ?? null),
             'scheduled_at'     => $scheduledAt,
             'client_name'      => $data['client_name'],
+            'client_phone'     => $data['client_phone'],
             'notes'            => $data['notes'] ?? null,
             'price_at_booking' => $service?->price ?? 0,
             'status'           => 'confirmed',
@@ -121,7 +152,12 @@ class AppointmentController extends Controller
         abort_unless($appointment->salon_id === $request->user()->salon->id, 403);
         abort_unless($appointment->status === 'confirmed', 422, 'Only confirmed appointments can be completed.');
 
-        $appointment->update(['status' => 'completed']);
+        $data = $request->validate([
+            'price_at_booking' => 'sometimes|numeric|min:0',
+            'notes'            => 'sometimes|nullable|string|max:500',
+        ]);
+
+        $appointment->update([...$data, 'status' => 'completed']);
         $appointment->load('client', 'service');
 
         if ($appointment->client) {
@@ -141,6 +177,36 @@ class AppointmentController extends Controller
 
         if ($appointment->client) {
             $appointment->client->notify(new AppointmentStatusChanged($appointment, 'cancelled'));
+        }
+
+        return new AppointmentResource($appointment);
+    }
+
+    public function approveCancellation(Request $request, Appointment $appointment)
+    {
+        abort_unless($appointment->salon_id === $request->user()->salon->id, 403);
+        abort_unless($appointment->status === 'cancellation_requested', 422, 'No pending cancellation request for this appointment.');
+
+        $appointment->update(['status' => 'cancelled']);
+        $appointment->load('client', 'service');
+
+        if ($appointment->client) {
+            $appointment->client->notify(new AppointmentStatusChanged($appointment, 'cancelled'));
+        }
+
+        return new AppointmentResource($appointment);
+    }
+
+    public function denyCancellation(Request $request, Appointment $appointment)
+    {
+        abort_unless($appointment->salon_id === $request->user()->salon->id, 403);
+        abort_unless($appointment->status === 'cancellation_requested', 422, 'No pending cancellation request for this appointment.');
+
+        $appointment->update(['status' => 'confirmed', 'cancellation_reason' => null]);
+        $appointment->load('client', 'service');
+
+        if ($appointment->client) {
+            $appointment->client->notify(new AppointmentStatusChanged($appointment, 'cancellation_denied'));
         }
 
         return new AppointmentResource($appointment);

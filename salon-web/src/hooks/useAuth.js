@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
+import i18n from '../i18n'
 import useAuthStore from '../store/auth'
 
 export function useAuth() {
@@ -18,6 +19,7 @@ export function useAuth() {
         if (me.role !== 'salon') { logout(); navigate('/login'); return }
         setUser(me)
         setLoading(false)
+        api.patch('/auth/locale', { locale: i18n.language }).catch(() => {})
       })
       .catch((err) => {
         if (err.response?.status === 401) { logout(); navigate('/login') }

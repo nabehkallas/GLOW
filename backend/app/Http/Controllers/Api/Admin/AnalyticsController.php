@@ -113,8 +113,42 @@ class AnalyticsController extends Controller
             )], DB::raw('quantity * unit_price'))
             ->orderByDesc('total_ordered')
             ->limit($limit)
-            ->get(['id', 'name', 'category', 'price'])
+            ->get(['id', 'name', 'category_en', 'category_ar', 'price'])
             ->toArray();
+    }
+
+    public function productsSold(Request $request)
+    {
+        $from = $request->filled('date_from')
+            ? Carbon::parse($request->get('date_from'))->startOfDay()
+            : Carbon::now()->startOfMonth();
+        $to = $request->filled('date_to')
+            ? Carbon::parse($request->get('date_to'))->endOfDay()
+            : Carbon::now()->endOfDay();
+
+        $products = Product::withSum(['orderItems as b2b_qty' => fn($q) => $q->whereHas(
+            'order', fn($o) => $o->where('status', 'delivered')->whereBetween('created_at', [$from, $to])
+        )], 'quantity')
+            ->withSum(['clientOrderItems as b2c_qty' => fn($q) => $q->whereHas(
+                'clientOrder', fn($o) => $o->where('status', 'delivered')->whereBetween('created_at', [$from, $to])
+            )], 'quantity')
+            ->get(['id', 'name', 'category_en', 'category_ar'])
+            ->map(fn($p) => [
+                'id'            => $p->id,
+                'name'          => $p->name,
+                'category_en'   => $p->category_en,
+                'category_ar'   => $p->category_ar,
+                'quantity_sold' => (int) ($p->b2b_qty ?? 0) + (int) ($p->b2c_qty ?? 0),
+            ])
+            ->filter(fn($p) => $p['quantity_sold'] > 0)
+            ->sortByDesc('quantity_sold')
+            ->values();
+
+        return response()->json([
+            'date_from' => $from->toDateString(),
+            'date_to'   => $to->toDateString(),
+            'products'  => $products,
+        ]);
     }
 
     private function ordersByStatus(): array

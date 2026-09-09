@@ -39,6 +39,17 @@ class SalonController extends Controller
         return SalonResource::collection($salons);
     }
 
+    public function cities()
+    {
+        $cities = Salon::where('status', 'approved')
+            ->whereNotNull('city')
+            ->distinct()
+            ->orderBy('city')
+            ->pluck('city');
+
+        return response()->json(['data' => $cities]);
+    }
+
     public function show(Request $request, Salon $salon)
     {
         abort_unless($salon->status === 'approved', 404);

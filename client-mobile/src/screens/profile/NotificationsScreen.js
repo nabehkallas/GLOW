@@ -5,24 +5,38 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { X, Bell } from 'lucide-react-native';
 import api from '../../api/client';
 import useNotificationStore from '../../stores/notificationStore';
+import { navigateForNotification } from '../../navigation/RootNavigator';
 import { colors, spacing, radius, shadow } from '../../theme';
 
-function NotifCard({ notif }) {
-  const title = notif.data?.title ?? notif.data?.message ?? '—';
-  const body  = notif.data?.body ?? null;
+function notificationText(t, data) {
+  switch (data?.type) {
+    case 'appointment_booked':
+      return t('notifications.messages.appointment_booked', { serviceName: data.service_name });
+    case 'appointment_status_changed':
+      return t('notifications.messages.appointment_status_changed', { serviceName: data.service_name, status: t('appointments.status.' + data.new_status) });
+    case 'client_order_status_changed':
+      return t('notifications.messages.client_order_status_changed', { id: data.order_id, status: t('store.status.' + data.new_status) });
+    default:
+      return data?.message ?? null;
+  }
+}
+
+function NotifCard({ notif, onPress }) {
+  const { t } = useTranslation();
+  const title = notificationText(t, notif.data) ?? '—';
   return (
-    <View style={[s.card, !notif.read_at && s.cardUnread]}>
+    <TouchableOpacity style={[s.card, !notif.read_at && s.cardUnread]} onPress={onPress} activeOpacity={0.8}>
       {!notif.read_at && <View style={s.dot} />}
       <View style={{ flex: 1 }}>
         <Text style={s.notifTitle}>{title}</Text>
-        {body ? <Text style={s.notifBody}>{body}</Text> : null}
         <Text style={s.notifDate}>
           {new Date(notif.created_at).toLocaleDateString('ar-SY')}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -55,6 +69,11 @@ export default function NotificationsScreen({ navigation }) {
   const unreadCount = notifs.filter((n) => !n.read_at).length;
   const close = () => navigation.goBack();
 
+  const openNotification = (notif) => {
+    navigation.goBack();
+    navigateForNotification(navigation, notif.data);
+  };
+
   return (
     <View style={s.overlay}>
       {/* Backdrop */}
@@ -68,7 +87,7 @@ export default function NotificationsScreen({ navigation }) {
         {/* Header */}
         <View style={s.header}>
           <TouchableOpacity onPress={close} style={s.closeBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Text style={s.closeBtnText}>✕</Text>
+            <X size={14} color={colors.textMuted} strokeWidth={1.75} />
           </TouchableOpacity>
           <Text style={s.title}>{t('notifications.title')}</Text>
           {unreadCount > 0
@@ -85,12 +104,12 @@ export default function NotificationsScreen({ navigation }) {
           : <FlatList
               data={notifs}
               keyExtractor={(i) => i.id}
-              renderItem={({ item }) => <NotifCard notif={item} />}
+              renderItem={({ item }) => <NotifCard notif={item} onPress={() => openNotification(item)} />}
               contentContainerStyle={s.list}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <View style={s.empty}>
-                  <Text style={{ fontSize: 40, marginBottom: spacing.md }}>🔔</Text>
+                  <Bell size={36} color={colors.textMuted} strokeWidth={1.5} style={{ marginBottom: spacing.md }} />
                   <Text style={s.emptyText}>{t('notifications.empty')}</Text>
                 </View>
               }
@@ -146,9 +165,6 @@ const s = StyleSheet.create({
     backgroundColor: colors.background,
     justifyContent: 'center', alignItems: 'center',
   },
-  closeBtnText: {
-    fontSize: 14, color: colors.textMuted, fontWeight: '700',
-  },
   markAll: {
     color: colors.primary, fontWeight: '600', fontSize: 12,
   },
@@ -163,7 +179,7 @@ const s = StyleSheet.create({
   cardUnread: { borderRightWidth: 3, borderRightColor: colors.primary },
   dot: {
     width: 8, height: 8, borderRadius: 4,
-    backgroundColor: colors.primary, marginTop: 6,
+    backgroundColor: '#ef4444', marginTop: 6,
   },
   notifTitle: { fontSize: 14, fontWeight: '700', color: colors.dark, textAlign: 'right' },
   notifBody: { fontSize: 13, color: colors.dark, textAlign: 'right', marginTop: 2, lineHeight: 20 },

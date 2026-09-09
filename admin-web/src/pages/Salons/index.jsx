@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import api from '../../api/axios'
 import Layout from '../../components/Layout'
 
 const STATUS_TABS = ['pending', 'approved', 'rejected']
 
 export default function Salons() {
+  const { t } = useTranslation()
   const [tab, setTab] = useState('pending')
   const [salons, setSalons] = useState([])
   const [loading, setLoading] = useState(true)
@@ -35,7 +38,7 @@ export default function Salons() {
   }
 
   const destroy = async (id) => {
-    if (!confirm('Permanently delete this salon?')) return
+    if (!confirm(t('salons.deleteConfirm'))) return
     await api.delete(`admin/salons/${id}`)
     load(tab)
   }
@@ -43,35 +46,35 @@ export default function Salons() {
   return (
     <Layout>
       <div className="p-8 space-y-6">
-        <h1 className="text-2xl font-bold text-prima-dark">Salons</h1>
+        <h1 className="text-2xl font-bold text-prima-dark">{t('salons.title')}</h1>
 
         <div className="flex gap-2">
           {STATUS_TABS.map((s) => (
             <button
               key={s}
               onClick={() => setTab(s)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize transition-colors ${
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 tab === s
                   ? 'bg-prima-orange text-white shadow-sm'
                   : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
               }`}
             >
-              {s}
+              {t(`salons.status.${s}`)}
             </button>
           ))}
         </div>
 
         {loading ? (
-          <p className="text-gray-400">Loading…</p>
+          <p className="text-gray-400">{t('common.loading')}</p>
         ) : salons.length === 0 ? (
-          <p className="text-gray-400">No {tab} salons.</p>
+          <p className="text-gray-400">{t('salons.noneOfStatus', { status: t(`salons.status.${tab}`) })}</p>
         ) : (
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-prima-dark text-xs uppercase">
                 <tr>
-                  {['Salon', 'Owner', 'City', 'Status', 'Actions'].map((h) => (
-                    <th key={h} className="px-6 py-3 text-left">{h}</th>
+                  {[t('salons.table.salon'), t('salons.table.owner'), t('salons.table.city'), t('salons.table.status'), t('common.actions')].map((h, i) => (
+                    <th key={i} className="px-6 py-3 text-start">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -79,7 +82,7 @@ export default function Salons() {
                 {salons.map((salon) => (
                   <tr key={salon.id} className="border-t border-gray-100 hover:bg-slate-50/50">
                     <td className="px-6 py-3">
-                      <div className="flex items-center gap-3">
+                      <Link to={`/salons/${salon.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         {salon.logo_url ? (
                           <img src={salon.logo_url} alt="" className="w-8 h-8 rounded-full object-cover" />
                         ) : (
@@ -88,10 +91,10 @@ export default function Salons() {
                           </div>
                         )}
                         <div>
-                          <p className="font-semibold text-prima-dark">{salon.name}</p>
+                          <p className="font-semibold text-prima-dark hover:underline">{salon.name}</p>
                           {salon.description && <p className="text-xs text-gray-400 truncate max-w-xs">{salon.description}</p>}
                         </div>
-                      </div>
+                      </Link>
                     </td>
                     <td className="px-6 py-3 text-gray-700">{salon.user?.name ?? '—'}<br /><span className="text-xs text-gray-400">{salon.user?.email}</span></td>
                     <td className="px-6 py-3 text-gray-600">{salon.city ?? '—'}</td>
@@ -101,23 +104,23 @@ export default function Salons() {
                         salon.status === 'rejected' ? 'bg-red-100 text-red-700' :
                         'bg-orange-100 text-orange-700'
                       }`}>
-                        {salon.status}
+                        {t(`salons.status.${salon.status}`)}
                       </span>
                     </td>
                     <td className="px-6 py-3 flex gap-2">
                       {salon.status === 'pending' && (
                         <>
-                          <Btn color="green" onClick={() => approve(salon.id)}>Approve</Btn>
-                          <Btn color="red" onClick={() => openReject(salon)}>Reject</Btn>
+                          <Btn color="green" onClick={() => approve(salon.id)}>{t('salons.approve')}</Btn>
+                          <Btn color="red" onClick={() => openReject(salon)}>{t('salons.reject')}</Btn>
                         </>
                       )}
                       {salon.status === 'approved' && (
-                        <Btn color="red" onClick={() => openReject(salon)}>Reject</Btn>
+                        <Btn color="red" onClick={() => openReject(salon)}>{t('salons.reject')}</Btn>
                       )}
                       {salon.status === 'rejected' && (
-                        <Btn color="green" onClick={() => approve(salon.id)}>Approve</Btn>
+                        <Btn color="green" onClick={() => approve(salon.id)}>{t('salons.approve')}</Btn>
                       )}
-                      <Btn color="gray" onClick={() => destroy(salon.id)}>Delete</Btn>
+                      <Btn color="gray" onClick={() => destroy(salon.id)}>{t('salons.delete')}</Btn>
                     </td>
                   </tr>
                 ))}
@@ -129,17 +132,17 @@ export default function Salons() {
         {rejectTarget && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl border border-gray-100">
-              <h2 className="font-semibold text-prima-dark mb-3">Reject "{rejectTarget.name}"</h2>
+              <h2 className="font-semibold text-prima-dark mb-3">{t('salons.rejectTitle', { name: rejectTarget.name })}</h2>
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="Reason for rejection (optional)"
+                placeholder={t('salons.rejectReasonPlaceholder')}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 mb-4"
                 rows={3}
               />
               <div className="flex gap-3">
-                <button onClick={confirmReject} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors">Confirm Reject</button>
-                <button onClick={() => setRejectTarget(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancel</button>
+                <button onClick={confirmReject} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors">{t('salons.confirmReject')}</button>
+                <button onClick={() => setRejectTarget(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">{t('common.cancel')}</button>
               </div>
             </div>
           </div>

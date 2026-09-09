@@ -1,5 +1,6 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
+import api from '../api/axios'
 import ar from './locales/ar.json'
 import en from './locales/en.json'
 
@@ -24,6 +25,7 @@ export function switchLanguage(lang) {
   localStorage.setItem('glow_lang', lang)
   document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr'
   document.documentElement.lang = lang
+  api.patch('/auth/locale', { locale: lang }).catch(() => {})
 }
 
 export default i18n

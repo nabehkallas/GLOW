@@ -6,9 +6,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { StatusBar } from 'expo-status-bar';
+import { Scissors, Star, Heart, HeartCrack } from 'lucide-react-native';
 import api from '../../api/client';
 import useFavoriteStore from '../../stores/favoriteStore';
 import { colors, spacing, radius, shadow } from '../../theme';
+
+const logo = require('../../../assets/logo.png');
 
 function FavCard({ salon, onPress }) {
   const toggle = useFavoriteStore((s) => s.toggle);
@@ -18,17 +21,22 @@ function FavCard({ salon, onPress }) {
         {salon.logo_url
           ? <Image source={{ uri: salon.logo_url }} style={s.image} resizeMode="cover" />
           : <View style={[s.image, { backgroundColor: '#e0e0e0', justifyContent: 'center', alignItems: 'center' }]}>
-              <Text style={{ fontSize: 28 }}>💇</Text>
+              <Scissors size={26} color={colors.textMuted} strokeWidth={1.5} />
             </View>
         }
       </View>
       <View style={s.info}>
         <Text style={s.name} numberOfLines={1}>{salon.name}</Text>
         <Text style={s.city}>{salon.city}</Text>
-        {salon.average_rating && <Text style={s.rating}>⭐ {salon.average_rating}</Text>}
+        {salon.average_rating && (
+          <View style={s.ratingRow}>
+            <Star size={12} color={colors.primary} fill={colors.primary} strokeWidth={1.75} />
+            <Text style={s.rating}>{salon.average_rating}</Text>
+          </View>
+        )}
       </View>
       <TouchableOpacity onPress={() => toggle(salon.id)} style={s.heart}>
-        <Text style={{ fontSize: 22 }}>❤️</Text>
+        <Heart size={22} color={colors.primary} fill={colors.primary} strokeWidth={1.75} />
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -52,9 +60,14 @@ export default function FavoritesScreen({ navigation }) {
   const onRefresh = async () => { setRefreshing(true); await fetch(); setRefreshing(false); };
 
   return (
-    <SafeAreaView style={s.root}>
-      <StatusBar style="dark" />
-      <Text style={s.title}>{t('favorites.title')}</Text>
+    <View style={s.root}>
+      <StatusBar style="light" />
+
+      <SafeAreaView style={s.headerSafe} edges={['top']}>
+        <View style={s.headerInner}>
+          <Image source={logo} style={s.headerLogo} resizeMode="contain" />
+        </View>
+      </SafeAreaView>
 
       <FlatList
         data={salons}
@@ -69,18 +82,20 @@ export default function FavoritesScreen({ navigation }) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListEmptyComponent={
           <View style={s.empty}>
-            <Text style={{ fontSize: 48, marginBottom: spacing.md }}>💔</Text>
+            <HeartCrack size={44} color={colors.textMuted} strokeWidth={1.5} style={{ marginBottom: spacing.md }} />
             <Text style={s.emptyText}>{t('favorites.empty')}</Text>
           </View>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  title: { fontSize: 22, fontWeight: '800', color: colors.dark, padding: spacing.md, textAlign: 'right' },
+  headerSafe: { backgroundColor: colors.dark },
+  headerInner: { height: 70, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  headerLogo: { width: '100%', height: 210 },
   list: { padding: spacing.md, gap: 12 },
   card: {
     backgroundColor: colors.card, borderRadius: radius.md, flexDirection: 'row',
@@ -91,7 +106,8 @@ const s = StyleSheet.create({
   info: { flex: 1, padding: spacing.sm, alignItems: 'flex-end' },
   name: { fontSize: 15, fontWeight: '700', color: colors.dark },
   city: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
-  rating: { fontSize: 13, color: colors.dark, marginTop: 4 },
+  ratingRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, marginTop: 4 },
+  rating: { fontSize: 13, color: colors.dark },
   heart: { padding: spacing.sm },
   empty: { paddingTop: 80, alignItems: 'center' },
   emptyText: { color: colors.textMuted, fontSize: 15, textAlign: 'center' },

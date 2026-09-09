@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { Clock } from 'lucide-react-native';
 import api from '../../api/client';
 import { colors, spacing, radius } from '../../theme';
 
@@ -84,11 +85,12 @@ export default function AvailableSlotsScreen({ route, navigation }) {
                   {svc.name}
                 </Text>
                 <View style={s.svcMeta}>
+                  <Clock size={12} color={active ? 'rgba(255,255,255,0.8)' : colors.textMuted} strokeWidth={1.75} />
                   <Text style={[s.svcDuration, active && { color: 'rgba(255,255,255,0.8)' }]}>
-                    ⏱ {svc.duration_minutes} د
+                    {svc.duration_minutes} د
                   </Text>
                   <Text style={[s.svcPrice, active && { color: '#fff' }]}>
-                    {svc.price} ل.س
+                    {t('salons.price', { amount: svc.price })}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -124,7 +126,7 @@ export default function AvailableSlotsScreen({ route, navigation }) {
           <ActivityIndicator color={colors.primary} size="large" style={{ marginTop: spacing.xl }} />
         ) : slots.length === 0 ? (
           <View style={s.noSlotsWrap}>
-            <Text style={s.noSlotsEmoji}>🕐</Text>
+            <Clock size={40} color={colors.textMuted} strokeWidth={1.5} />
             <Text style={s.noSlotsText}>{t('slots.noSlots')}</Text>
           </View>
         ) : (
@@ -300,7 +302,6 @@ const s = StyleSheet.create({
 
   /* Empty state */
   noSlotsWrap: { paddingTop: spacing.xl, alignItems: 'center', gap: spacing.sm },
-  noSlotsEmoji: { fontSize: 44 },
   noSlotsText: { color: colors.textMuted, fontSize: 15, textAlign: 'center' },
 
   /* Confirm footer */

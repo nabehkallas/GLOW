@@ -12,6 +12,8 @@ const useAuthStore = create((set) => ({
 
   setUser: (user) => set({ user, salon: user.salon ?? null }),
 
+  updateSalon: (partial) => set((s) => ({ salon: s.salon ? { ...s.salon, ...partial } : s.salon })),
+
   logout: () => {
     localStorage.removeItem('token')
     set({ user: null, salon: null, token: null })

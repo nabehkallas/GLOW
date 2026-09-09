@@ -7,6 +7,7 @@
     "add": "Add",
     "loading": "Loading…",
     "saving": "Saving…",
+    "recentSearches": "Recent searches",
     "placing": "Placing…",
     "confirm": "Confirm",
     "complete": "Complete",
@@ -21,7 +22,8 @@
     "service": "Service",
     "source": "Source",
     "notes": "Notes",
-    "optional": "Optional"
+    "optional": "Optional",
+    "all": "All"
   },
   "lang": {
     "switch": "العربية",
@@ -42,21 +44,27 @@
     "completed": "Completed",
     "cancelled": "Cancelled",
     "shipped": "Shipped",
-    "delivered": "Delivered"
+    "delivered": "Delivered",
+    "failed": "Failed",
+    "returned": "Returned",
+    "cancellation_requested": "Cancellation Requested",
+    "return_requested": "Return Requested"
   },
   "nav": {
     "dashboard": "Dashboard",
     "appointments": "Appointments",
     "services": "Services",
     "orders": "Orders",
+    "history": "History",
     "workingHours": "Working Hours",
     "reviews": "Reviews",
     "analytics": "Analytics",
     "clients": "Clients",
     "media": "Media",
+    "balance": "Balance",
     "profile": "Profile",
-    "logout": "Logout",
-    "cashier": "Cashier"
+    "settings": "Settings",
+    "logout": "Logout"
   },
   "auth": {
     "signIn": "Sign In",
@@ -72,6 +80,7 @@
     "phone": "Phone",
     "syrianNumber": "Syrian number",
     "phoneError": "Enter a valid Syrian mobile number (e.g. 0991234567)",
+    "locationRequired": "Please set your salon's location on the map or use GPS.",
     "pleaseWait": "Please wait…",
     "registerAwaitApproval": "Register & Await Approval",
     "pendingNote": "After registering, your account will be reviewed by an admin before you can access the dashboard.",
@@ -100,7 +109,14 @@
     "markAllRead": "Mark all read",
     "loading": "Loading…",
     "empty": "No notifications yet.",
-    "new": "New notification"
+    "new": "New notification",
+    "messages": {
+      "appointment_booked": "New booking: {{clientName}} — {{serviceName}}",
+      "appointment_status_changed": "Your appointment for {{serviceName}} is now {{status}}.",
+      "order_status_changed": "Order #{{id}} is now {{status}}.",
+      "salon_approved": "Your salon {{name}} has been approved.",
+      "salon_rejected": "Your salon {{name}} was not approved: {{reason}}"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -111,11 +127,13 @@
     "topServices": "Top Services",
     "busiestDays": "Busiest Days",
     "recentAppointments": "Recent Appointments",
+    "recentOrders": "Recent Orders",
+    "viewAll": "View all",
     "date": "Date"
   },
   "appointments": {
     "title": "Appointments",
-    "addWalkIn": "+ Walk-in",
+    "addEntry": "+ Add",
     "noAppointments": "No {{status}} appointments.",
     "scheduledAt": "Scheduled At",
     "walkInBadge": "Walk-in",
@@ -123,6 +141,11 @@
     "addWalkInTitle": "Add Walk-in Appointment",
     "clientName": "Client Name",
     "clientPlaceholder": "Walk-in customer name",
+    "clientPhone": "Phone Number",
+    "clientPhonePlaceholder": "09XXXXXXXX",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "clearDates": "Clear dates",
     "selectService": "Select service…",
     "other": "Other",
     "duration": "Duration",
@@ -130,7 +153,13 @@
     "optionalNotes": "Optional notes",
     "addAppointment": "Add Appointment",
     "failedToAdd": "Failed to add appointment.",
-    "min": "min"
+    "completeTitle": "Complete Appointment",
+    "completeFailed": "Failed to complete appointment.",
+    "cancellationReason": "Cancellation reason",
+    "approveCancellation": "Approve",
+    "denyCancellation": "Keep",
+    "min": "min",
+    "searchPlaceholder": "Search by client name or phone…"
   },
   "services": {
     "title": "Services",
@@ -154,15 +183,32 @@
     "address": "Address",
     "city": "City",
     "phone": "Phone",
-    "latitude": "Latitude",
-    "longitude": "Longitude",
+    "location": "Location",
+    "trackLocation": "Track My Location",
+    "tracking": "Tracking…",
+    "locationNotSet": "Location not set",
+    "locationError": "Couldn't get your location. Please allow location access and try again.",
+    "locationUnsupported": "Your browser doesn't support location tracking.",
     "capacity": "Seats / Capacity",
     "capacityHint": "How many clients can be served at the same time",
     "saveChanges": "Save Changes",
     "salonLogo": "Salon Logo",
     "logoHint": "JPG, PNG or WebP — max 2 MB",
     "changeLogo": "Change photo",
-    "logoFailed": "Logo upload failed. Try again."
+    "logoFailed": "Logo upload failed. Try again.",
+    "productsOrdered": "Products Ordered",
+    "noProductsOrdered": "You haven't ordered any products yet."
+  },
+  "settings": {
+    "comingSoon": "Settings options will be added here soon.",
+    "balanceManagementTitle": "Balance Management",
+    "balanceManagementDescription": "Track income and expenses for your salon in a dedicated Balance page.",
+    "saveFailed": "Failed to save. Try again."
+  },
+  "history": {
+    "title": "History",
+    "noAppointments": "No appointments found for this range.",
+    "noOrders": "No orders found for this range."
   },
   "workingHours": {
     "title": "Working Hours",
@@ -170,12 +216,35 @@
     "to": "to",
     "saveSchedule": "Save Schedule",
     "savedOk": "Saved successfully.",
-    "saveFailed": "Failed to save."
+    "saveFailed": "Failed to save.",
+    "grid": {
+      "title": "Weekly Schedule",
+      "thisWeek": "This week",
+      "legendBooked": "Booked",
+      "legendFree": "Free — click for options",
+      "legendClosed": "Closed",
+      "goToAppointments": "Go to Appointments",
+      "choiceTitle": "What would you like to do?",
+      "choiceWalkIn": "Add Walk-in",
+      "choiceBlock": "Block this time",
+      "blockTitle": "Block Time",
+      "blockSubmit": "Block",
+      "blockFailed": "Failed to block this time. Try again.",
+      "blockNotePlaceholder": "Reason (optional)…",
+      "blockedTitle": "Blocked",
+      "removeBlock": "Remove block",
+      "blockScope": "Applies to",
+      "blockWholeSalon": "Whole salon",
+      "serviceRestrictedTooltip": "One or more services are restricted at this time",
+      "serviceRestrictedTitle": "Restricted Services"
+    }
   },
   "orders": {
     "shop": "Shop",
     "myOrders": "My Orders",
     "all": "All",
+    "onOfferFilter": "On Offer",
+    "priceBreaksFilter": "Price Breaks",
     "noProducts": "No products in this category.",
     "outOfStock": "Out of stock",
     "onlyLeft": "Only {{count}} left",
@@ -187,7 +256,30 @@
     "orderPlaced": "Order placed successfully!",
     "each": "each",
     "items": "{{count}} item(s)",
-    "stock": "Stock"
+    "cancelOrder": "Cancel Order",
+    "cancelConfirm": "Are you sure you want to cancel this order?",
+    "requestCancelConfirm": "This order is already {{status}} — the admin will need to approve your cancellation.",
+    "cancelPending": "Your cancellation request is being reviewed.",
+    "cancelReason": "Cancellation reason",
+    "requestReturn": "Request Return",
+    "requestReturnConfirm": "Request a return for this order? The admin will review your request.",
+    "returnPending": "Your return request is being reviewed.",
+    "returnReason": "Return reason",
+    "searchPlaceholder": "Search products…",
+    "timeline": {
+      "pending": "Waiting for admin approval",
+      "confirmed": "Confirmed, being prepared",
+      "shipped": "On its way to you",
+      "delivered": "Delivered successfully"
+    },
+    "stock": "Stock",
+    "notes": "Notes",
+    "notesPlaceholder": "Add a comment for this order (optional)…",
+    "chooseOptions": "Browse options",
+    "selectOptions": "Select an option for each attribute to continue.",
+    "combinationOutOfStock": "This combination is out of stock.",
+    "saleTag": "Sale",
+    "tierHintLabel": "Buy more, save more:"
   },
   "reviews": {
     "title": "Reviews",
@@ -231,39 +323,6 @@
     "deleteConfirm": "Delete this item?",
     "uploadFailed": "Upload failed."
   },
-  "cashier": {
-    "title": "Cashier",
-    "addTransaction": "Add Transaction",
-    "dailySummary": "Daily Summary",
-    "totalIn": "Total In",
-    "totalOut": "Total Out",
-    "net": "Net Balance",
-    "cashIn": "Cash In",
-    "cashOut": "Cash Out",
-    "amount": "Amount",
-    "date": "Date",
-    "type": "Type",
-    "all": "All",
-    "filterType": "Filter by type",
-    "from": "From",
-    "to": "To",
-    "clearFilters": "Clear filters",
-    "empty": "No transactions yet.",
-    "notePlaceholder": "Optional note…",
-    "saveFailed": "Failed to save. Try again.",
-    "invalidAmount": "Enter a valid amount.",
-    "cat": {
-      "appointment": "Appointment",
-      "product_sale": "Product Sale",
-      "tip": "Tip",
-      "other": "Other",
-      "supplies": "Supplies",
-      "rent": "Rent",
-      "salaries": "Salaries",
-      "utilities": "Utilities",
-      "maintenance": "Maintenance"
-    }
-  },
   "analytics": {
     "title": "Analytics",
     "lastMonths": "Last {{count}} months",
@@ -271,6 +330,72 @@
     "monthlyAppointments": "Monthly Appointments",
     "topServices": "Top Services",
     "bookings": "Bookings",
-    "revenue": "Revenue"
+    "revenue": "Revenue",
+    "totalAppointments": "Total Appointments",
+    "pendingAppointments": "Pending",
+    "confirmedAppointments": "Confirmed",
+    "cancelledAppointments": "Cancelled",
+    "thisMonthRevenue": "This Month's Revenue",
+    "totalOrders": "Restock Orders",
+    "totalSpentOnProducts": "Spent on Products",
+    "busiestDays": "Busiest Days",
+    "ordersSummary": "Restock Orders Summary",
+    "recentAppointments": "Recent Appointments",
+    "noRecentAppointments": "No appointments yet.",
+    "count": "Count"
+  },
+  "balance": {
+    "addTransaction": "+ Add Transaction",
+    "filters": {
+      "from": "From",
+      "to": "To",
+      "clear": "Clear",
+      "presets": {
+        "today": "Today",
+        "week": "This Week",
+        "month": "This Month",
+        "year": "This Year",
+        "all": "All Time"
+      }
+    },
+    "history": {
+      "title": "Balance History"
+    },
+    "summary": {
+      "totalIncome": "Total Income",
+      "totalExpenses": "Total Expenses",
+      "netBalance": "Net Balance",
+      "breakdown": "Includes {{appointments}} from appointments and {{manual}} logged manually."
+    },
+    "categories": {
+      "product_sale": "Product Sale",
+      "salaries": "Salaries",
+      "maintenance": "Maintenance",
+      "supplies": "Salon Supplies",
+      "other": "Other"
+    },
+    "form": {
+      "title": "Add Transaction",
+      "income": "Income",
+      "expense": "Expense",
+      "category": "Category",
+      "amount": "Amount",
+      "date": "Date",
+      "comment": "Comment",
+      "commentPlaceholder": "Optional note…",
+      "validationAmount": "Enter an amount greater than 0.",
+      "saveFailed": "Failed to save. Try again."
+    },
+    "table": {
+      "type": "Type",
+      "category": "Category",
+      "amount": "Amount",
+      "comment": "Comment",
+      "date": "Date",
+      "in": "Income",
+      "out": "Expense",
+      "noTransactions": "No transactions yet.",
+      "deleteConfirm": "Remove this transaction?"
+    }
   }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Models\ScheduleBlock;
 use App\Models\Salon;
 use App\Models\SalonService;
 use App\Models\WorkingHour;
@@ -98,6 +99,17 @@ class AvailableSlotsController extends Controller
                 'end'   => Carbon::parse($a->scheduled_at)->addMinutes($a->service->duration_minutes),
             ]);
 
+        // Time ranges the salon owner has manually blocked off (breaks, personal time, etc.)
+        // — either for the whole salon, or specifically for this service.
+        $blocked = ScheduleBlock::where('salon_id', $salon->id)
+            ->whereDate('starts_at', $date->toDateString())
+            ->where(fn($q) => $q->whereNull('salon_service_id')->orWhere('salon_service_id', $service->id))
+            ->get()
+            ->map(fn($b) => [
+                'start' => $b->starts_at->copy(),
+                'end'   => $b->starts_at->copy()->addMinutes($b->duration_minutes),
+            ]);
+
         $slots  = [];
         $cursor = $open->copy();
 
@@ -110,7 +122,11 @@ class AvailableSlotsController extends Controller
                 fn($b) => $slotStart->lt($b['end']) && $slotEnd->gt($b['start'])
             )->count();
 
-            $isAvailable = $overlapping < $capacity;
+            $isBlocked = $blocked->contains(
+                fn($b) => $slotStart->lt($b['end']) && $slotEnd->gt($b['start'])
+            );
+
+            $isAvailable = $overlapping < $capacity && !$isBlocked;
 
             // Past slots on today are unavailable
             if ($date->isToday() && $slotStart->lte($now)) {

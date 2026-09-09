@@ -10,6 +10,7 @@
     "close": "إغلاق",
     "back": "رجوع",
     "search": "بحث",
+    "recentSearches": "عمليات البحث الأخيرة",
     "noData": "لا توجد بيانات",
     "all": "الكل"
   },
@@ -35,11 +36,13 @@
     "explore": "استكشاف",
     "appointments": "المواعيد",
     "favorites": "المفضلة",
+    "store": "المتجر",
     "profile": "حسابي"
   },
   "salons": {
     "search": "ابحث عن صالون...",
     "allCities": "جميع المدن",
+    "selectCity": "اختر المدينة",
     "sortByDistance": "الأقرب أولاً",
     "km": "كم",
     "rating": "التقييم",
@@ -55,7 +58,24 @@
     "open": "مفتوح",
     "noSalons": "لا توجد صالونات",
     "duration": "{{min}} دقيقة",
-    "price": "{{amount}} ل.س"
+    "price": "${{amount}}",
+    "listView": "قائمة",
+    "mapView": "خريطة",
+    "locationDenied": "يجب السماح بالوصول للموقع لعرض الخريطة",
+    "openNow": "مفتوح الآن",
+    "closedNow": "مغلق الآن",
+    "mostRequestedServices": "الخدمات الأكثر طلباً",
+    "customerReviews": "تقييمات العملاء",
+    "viewAll": "عرض الكل",
+    "anonymous": "مجهول",
+    "call": "اتصال",
+    "directions": "الاتجاهات",
+    "salonLocation": "موقع الصالون",
+    "badges": {
+      "topRated": "الأعلى تقييماً",
+      "licensed": "مرخّص",
+      "memberSince": "عضو منذ {{year}}"
+    }
   },
   "slots": {
     "selectService": "اختر الخدمة",
@@ -85,10 +105,15 @@
       "pending": "في الانتظار",
       "confirmed": "مؤكد",
       "completed": "مكتمل",
-      "cancelled": "ملغي"
+      "cancelled": "ملغي",
+      "cancellation_requested": "طلب إلغاء قيد المراجعة"
     },
     "cancel": "إلغاء الموعد",
     "cancelConfirm": "هل أنت متأكد من إلغاء هذا الموعد؟",
+    "requestCancel": "طلب إلغاء الموعد",
+    "requestCancelConfirm": "هذا الموعد مؤكد بالفعل — سيحتاج الصالون للموافقة على طلب الإلغاء. هل تريد المتابعة؟",
+    "cancellationPending": "بانتظار رد الصالون على طلب إلغائك.",
+    "cancellationReason": "السبب",
     "leaveReview": "اكتب تقييماً",
     "noUpcoming": "لا توجد مواعيد قادمة",
     "noPast": "لا توجد مواعيد سابقة",
@@ -128,6 +153,66 @@
     "title": "الإشعارات",
     "markAllRead": "تحديد الكل كمقروء",
     "empty": "لا توجد إشعارات",
-    "unread": "غير مقروءة"
+    "unread": "غير مقروءة",
+    "messages": {
+      "appointment_booked": "حجز جديد: {{serviceName}}",
+      "appointment_status_changed": "موعدك لـ {{serviceName}} أصبح الآن {{status}}.",
+      "client_order_status_changed": "الطلب رقم {{id}} أصبح الآن {{status}}."
+    }
+  },
+  "store": {
+    "title": "المتجر",
+    "search": "ابحث عن منتج...",
+    "onOfferFilter": "عروض خاصة",
+    "priceBreaksFilter": "خصومات الكمية",
+    "noProducts": "لا توجد منتجات",
+    "outOfStock": "نفدت الكمية",
+    "addToCart": "أضف للسلة",
+    "cart": "السلة",
+    "cartEmpty": "سلتك فارغة",
+    "cartEmptyMsg": "أضف منتجات من المتجر لتبدأ",
+    "quantity": "الكمية",
+    "remove": "إزالة",
+    "notes": "ملاحظات (اختياري)",
+    "notesPlaceholder": "أضف أي ملاحظات على طلبك...",
+    "total": "الإجمالي",
+    "checkout": "إتمام الطلب",
+    "checkoutPayment": "الدفع عند الاستلام",
+    "orderSuccess": "تم إرسال طلبك بنجاح",
+    "orderSuccessMsg": "سيتم إشعارك عند تحديث حالة الطلب",
+    "myOrders": "طلباتي",
+    "noOrders": "لا توجد طلبات بعد",
+    "orderNumber": "طلب #{{id}}",
+    "cancelOrder": "إلغاء الطلب",
+    "cancelConfirm": "هل أنت متأكد من إلغاء هذا الطلب؟",
+    "requestCancelConfirm": "هذا الطلب أصبح {{status}} بالفعل — سيحتاج المسؤول للموافقة على إلغائه. هل تريد المتابعة؟",
+    "cancelPending": "طلب الإلغاء الخاص بك قيد المراجعة.",
+    "requestReturn": "طلب إرجاع",
+    "requestReturnConfirm": "هل تريد طلب إرجاع هذا الطلب؟ سيقوم المسؤول بمراجعة طلبك.",
+    "returnPending": "طلب الإرجاع الخاص بك قيد المراجعة.",
+    "status": {
+      "pending": "بانتظار الموافقة",
+      "confirmed": "تمت الموافقة",
+      "shipped": "تم الشحن",
+      "delivered": "تم التسليم",
+      "cancelled": "ملغي",
+      "failed": "فشل التسليم",
+      "returned": "مرتجع",
+      "return_requested": "طلب إرجاع",
+      "cancellation_requested": "طلب إلغاء"
+    },
+    "timeline": {
+      "pending": "بانتظار موافقة الإدارة",
+      "confirmed": "تمت الموافقة، جاري التجهيز",
+      "shipped": "الطلب في الطريق إليك",
+      "delivered": "تم التسليم بنجاح"
+    },
+    "chooseOptions": "اختر الخيارات",
+    "selectOptions": "اختر خيارًا لكل خاصية للمتابعة.",
+    "combinationOutOfStock": "هذه التركيبة غير متوفرة حاليًا.",
+    "items": "{{count}} منتج",
+    "viewCart": "عرض السلة",
+    "saleTag": "تخفيض",
+    "tierHintLabel": "اشترِ أكثر ووفّر أكثر:"
   }
 }

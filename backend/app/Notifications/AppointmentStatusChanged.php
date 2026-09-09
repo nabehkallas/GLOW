@@ -12,12 +12,6 @@ class AppointmentStatusChanged extends Notification
 {
     use Queueable;
 
-    private const STATUS_LABELS = [
-        'confirmed'  => ['ar' => 'تم تأكيد موعدك', 'en' => 'confirmed'],
-        'completed'  => ['ar' => 'اكتمل موعدك',    'en' => 'completed'],
-        'cancelled'  => ['ar' => 'تم إلغاء موعدك', 'en' => 'cancelled'],
-    ];
-
     public function __construct(public Appointment $appointment, public string $newStatus) {}
 
     public function via(object $notifiable): array
@@ -28,17 +22,23 @@ class AppointmentStatusChanged extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $scheduledAt = $this->appointment->scheduled_at->format('D, M j \a\t g:i A');
-        $statusLabel = ucfirst($this->newStatus);
+        $locale = $notifiable->locale ?? 'ar';
+        $statusLabel = trans("notifications.statuses.{$this->newStatus}", [], $locale);
 
         return (new MailMessage)
-            ->subject("Appointment {$statusLabel} — GLOW")
-            ->greeting("Hello {$notifiable->name},")
-            ->line("Your appointment for **{$this->appointment->service?->name}** on {$scheduledAt} has been **{$this->newStatus}**.");
+            ->subject(trans('notifications.appointment_status.mail_subject', ['status' => $statusLabel], $locale))
+            ->greeting(trans('notifications.greeting', ['name' => $notifiable->name], $locale))
+            ->line(trans('notifications.appointment_status.mail_line', [
+                'service' => $this->appointment->service?->name,
+                'time'    => $scheduledAt,
+                'status'  => $statusLabel,
+            ], $locale));
     }
 
     public function toArray(object $notifiable): array
     {
-        $arLabel = self::STATUS_LABELS[$this->newStatus]['ar'] ?? $this->newStatus;
+        $locale = $notifiable->locale ?? 'ar';
+        $title = trans("notifications.appointment_status.{$this->newStatus}", [], $locale);
 
         return [
             'type'           => 'appointment_status_changed',
@@ -46,20 +46,20 @@ class AppointmentStatusChanged extends Notification
             'new_status'     => $this->newStatus,
             'service_name'   => $this->appointment->service?->name,
             'scheduled_at'   => $this->appointment->scheduled_at->toDateTimeString(),
-            'title'          => $arLabel,
+            'title'          => $title,
             'body'           => $this->appointment->service?->name,
-            'message'        => "Your appointment for {$this->appointment->service?->name} has been {$this->newStatus}.",
+            'message'        => $title,
         ];
     }
 
     public function toExpoPush(object $notifiable): array
     {
-        $arLabel = self::STATUS_LABELS[$this->newStatus]['ar'] ?? $this->newStatus;
+        $locale = $notifiable->locale ?? 'ar';
 
         return [
             'to'    => $notifiable->expo_push_token,
-            'title' => $arLabel,
-            'body'  => $this->appointment->service?->name ?? 'موعدك',
+            'title' => trans("notifications.appointment_status.{$this->newStatus}", [], $locale),
+            'body'  => $this->appointment->service?->name ?? trans('notifications.appointment_booked.title', [], $locale),
             'data'  => [
                 'type'           => 'appointment_status_changed',
                 'appointment_id' => $this->appointment->id,

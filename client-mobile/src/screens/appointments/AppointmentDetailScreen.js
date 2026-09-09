@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, ActivityIndicator,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { ChevronLeft } from 'lucide-react-native';
 import api from '../../api/client';
 import { colors, spacing, radius, shadow } from '../../theme';
 
@@ -11,6 +12,7 @@ const STATUS_COLOR = {
   confirmed: colors.green,
   completed: '#90a4ae',
   cancelled: '#ef5350',
+  cancellation_requested: '#ff7043',
 };
 
 function Row({ label, value }) {
@@ -29,6 +31,38 @@ export default function AppointmentDetailScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={{ paddingHorizontal: 16 }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <ChevronLeft size={24} color="#fff" strokeWidth={1.75} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
+
+  useEffect(() => {
+    // Intercepts every way this screen can be dismissed — header button tap,
+    // iOS swipe-back gesture, Android hardware back — not just the button's
+    // onPress above (which the gesture/hardware paths never go through).
+    // Always land on the appointments list deterministically, regardless of
+    // how deep or shallow this screen's stack is. Without this, gesture/
+    // hardware back falls through to the default goBack(), which can bubble
+    // to the tab navigator's own switch-history and strand this tab with no
+    // way back.
+    let allowNext = false;
+    return navigation.addListener('beforeRemove', (e) => {
+      if (allowNext) return;
+      e.preventDefault();
+      allowNext = true;
+      navigation.popTo('AppointmentList');
+    });
+  }, [navigation]);
+
   useEffect(() => {
     api.get(`/client/appointments/${appointmentId}`)
       .then((res) => setAppt(res.data.data ?? res.data))
@@ -36,14 +70,16 @@ export default function AppointmentDetailScreen({ route, navigation }) {
   }, []);
 
   const handleCancel = () => {
-    Alert.alert('', t('appointments.cancelConfirm'), [
+    const isDirect = appt.status === 'pending';
+    Alert.alert('', isDirect ? t('appointments.cancelConfirm') : t('appointments.requestCancelConfirm'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
-        text: t('appointments.cancel'), style: 'destructive', onPress: async () => {
+        text: isDirect ? t('appointments.cancel') : t('appointments.requestCancel'), style: 'destructive', onPress: async () => {
           setCancelling(true);
           try {
-            await api.patch(`/client/appointments/${appointmentId}/cancel`);
-            setAppt((prev) => ({ ...prev, status: 'cancelled' }));
+            const res = await api.patch(`/client/appointments/${appointmentId}/cancel`);
+            const updated = res.data.data ?? res.data;
+            setAppt((prev) => ({ ...prev, status: updated.status, cancellation_reason: updated.cancellation_reason }));
           } catch (err) {
             Alert.alert('', err.response?.data?.message ?? t('common.error'));
           } finally { setCancelling(false); }
@@ -58,7 +94,9 @@ export default function AppointmentDetailScreen({ route, navigation }) {
 
   if (!appt) return null;
 
-  const canCancel = ['pending', 'confirmed'].includes(appt.status);
+  const canCancel = appt.status === 'pending';
+  const canRequestCancel = appt.status === 'confirmed';
+  const cancellationPending = appt.status === 'cancellation_requested';
   const canReview = appt.status === 'completed';
   const color = STATUS_COLOR[appt.status] ?? colors.textMuted;
 
@@ -73,10 +111,19 @@ export default function AppointmentDetailScreen({ route, navigation }) {
         <Row label={t('appointments.service')} value={appt.service?.name} />
         <Row label={t('booking.date')} value={appt.scheduled_at?.slice(0, 10)} />
         <Row label={t('booking.time')} value={appt.scheduled_at?.slice(11, 16)} />
-        <Row label={t('booking.price')} value={appt.service?.price ? `${appt.service.price} ل.س` : null} />
-        <Row label={t('booking.duration')} value={appt.service?.duration_minutes ? `${appt.service.duration_minutes} دقيقة` : null} />
+        <Row label={t('booking.price')} value={appt.service?.price ? t('salons.price', { amount: appt.service.price }) : null} />
+        <Row label={t('booking.duration')} value={appt.service?.duration_minutes ? t('salons.duration', { min: appt.service.duration_minutes }) : null} />
         {appt.notes && <Row label={t('appointments.notes')} value={appt.notes} />}
+        {appt.cancellation_reason && <Row label={t('appointments.cancellationReason')} value={appt.cancellation_reason} />}
       </View>
+
+      {cancellationPending && (
+        <View style={[s.card, { backgroundColor: '#ff704322' }]}>
+          <Text style={{ color: '#ff7043', fontSize: 13, fontWeight: '600', textAlign: 'center' }}>
+            {t('appointments.cancellationPending')}
+          </Text>
+        </View>
+      )}
 
       {canReview && (
         <TouchableOpacity
@@ -88,14 +135,16 @@ export default function AppointmentDetailScreen({ route, navigation }) {
         </TouchableOpacity>
       )}
 
-      {canCancel && (
+      {(canCancel || canRequestCancel) && (
         <TouchableOpacity
           style={[s.btn, { backgroundColor: '#ef5350' }, cancelling && { opacity: 0.6 }]}
           onPress={handleCancel}
           disabled={cancelling}
           activeOpacity={0.8}
         >
-          <Text style={s.btnText}>{cancelling ? t('common.loading') : t('appointments.cancel')}</Text>
+          <Text style={s.btnText}>
+            {cancelling ? t('common.loading') : canCancel ? t('appointments.cancel') : t('appointments.requestCancel')}
+          </Text>
         </TouchableOpacity>
       )}
     </ScrollView>

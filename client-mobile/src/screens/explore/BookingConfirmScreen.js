@@ -48,8 +48,8 @@ export default function BookingConfirmScreen({ route, navigation }) {
         <Row label={t('booking.service')} value={service.name} />
         <Row label={t('booking.date')} value={date} />
         <Row label={t('booking.time')} value={slot.time} />
-        <Row label={t('booking.duration')} value={`${service.duration_minutes} دقيقة`} />
-        <Row label={t('booking.price')} value={`${service.price} ل.س`} />
+        <Row label={t('booking.duration')} value={t('salons.duration', { min: service.duration_minutes })} />
+        <Row label={t('booking.price')} value={t('salons.price', { amount: service.price })} />
       </View>
 
       <TextInput

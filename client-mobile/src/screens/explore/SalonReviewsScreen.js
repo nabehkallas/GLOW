@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import api from '../../api/client';
+import StarRating from '../../components/StarRating';
 import { colors, spacing, radius, shadow } from '../../theme';
 
 function ReviewCard({ review }) {
@@ -13,7 +14,7 @@ function ReviewCard({ review }) {
         <Text style={s.date}>{new Date(review.created_at).toLocaleDateString('ar-SY')}</Text>
         <Text style={s.name}>{review.user?.name ?? 'مجهول'}</Text>
       </View>
-      <Text style={s.stars}>{'⭐'.repeat(review.rating)}</Text>
+      <View style={s.stars}><StarRating rating={review.rating} /></View>
       {review.comment ? <Text style={s.comment}>{review.comment}</Text> : null}
     </View>
   );
@@ -76,7 +77,7 @@ const s = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   name: { fontSize: 14, fontWeight: '600', color: colors.dark },
   date: { fontSize: 12, color: colors.textMuted, writingDirection: 'ltr' },
-  stars: { fontSize: 16, marginBottom: 6 },
+  stars: { alignItems: 'flex-end', marginBottom: 6 },
   comment: { fontSize: 14, color: colors.dark, textAlign: 'right', lineHeight: 22 },
   empty: { paddingTop: 60, alignItems: 'center' },
   emptyText: { color: colors.textMuted, fontSize: 15 },

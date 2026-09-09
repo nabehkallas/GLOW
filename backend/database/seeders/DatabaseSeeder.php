@@ -80,11 +80,11 @@ class DatabaseSeeder extends Seeder
 
         // ── Products ───────────────────────────────────────────
         $products = [
-            ['name' => 'Olaplex No.3',           'price' => 28,  'stock' => 50, 'category' => 'Hair Care'],
-            ['name' => 'Moroccan Oil Treatment',  'price' => 45,  'stock' => 30, 'category' => 'Hair Care'],
-            ['name' => 'OPI Nail Polish Set',     'price' => 60,  'stock' => 20, 'category' => 'Nails'],
-            ['name' => 'La Mer Face Cream',       'price' => 180, 'stock' => 15, 'category' => 'Skin Care'],
-            ['name' => 'Color Depositing Mask',   'price' => 22,  'stock' => 40, 'category' => 'Hair Care'],
+            ['name' => 'Olaplex No.3',           'price' => 28,  'stock' => 50, 'category_en' => 'Hair Care', 'category_ar' => 'العناية بالشعر'],
+            ['name' => 'Moroccan Oil Treatment',  'price' => 45,  'stock' => 30, 'category_en' => 'Hair Care', 'category_ar' => 'العناية بالشعر'],
+            ['name' => 'OPI Nail Polish Set',     'price' => 60,  'stock' => 20, 'category_en' => 'Nails', 'category_ar' => 'الأظافر'],
+            ['name' => 'La Mer Face Cream',       'price' => 180, 'stock' => 15, 'category_en' => 'Skin Care', 'category_ar' => 'العناية بالبشرة'],
+            ['name' => 'Color Depositing Mask',   'price' => 22,  'stock' => 40, 'category_en' => 'Hair Care', 'category_ar' => 'العناية بالشعر'],
         ];
 
         $createdProducts = [];
@@ -187,5 +187,8 @@ class DatabaseSeeder extends Seeder
                 ['product_id' => $createdProducts[2]->id, 'quantity' => 1, 'unit_price' => $createdProducts[2]->price],
             ]);
         }
+
+        // ── More demo salons & products, with generated placeholder images ──
+        $this->call(DemoContentSeeder::class);
     }
 }

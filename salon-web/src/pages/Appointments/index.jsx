@@ -1,30 +1,43 @@
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import api from '../../api/axios'
 import Layout from '../../components/Layout'
+import Modal from '../../components/Modal'
+import WalkInForm from '../../components/WalkInForm'
+import WalkInOrBlockChoice from '../../components/WalkInOrBlockChoice'
+import BlockForm from '../../components/BlockForm'
+import useRecentSearches from '../../hooks/useRecentSearches'
+import RecentSearchChips from '../../components/RecentSearchChips'
 
-const STATUS_KEYS = ['pending', 'confirmed', 'completed', 'cancelled']
+const STATUS_KEYS = ['all', 'pending', 'cancellation_requested', 'confirmed', 'completed', 'cancelled']
 
 export default function Appointments() {
   const { t } = useTranslation()
-  const [status, setStatus] = useState('pending')
+  const [searchParams] = useSearchParams()
+  const initialStatus = STATUS_KEYS.includes(searchParams.get('status')) ? searchParams.get('status') : 'pending'
+  const [status, setStatus] = useState(initialStatus)
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [search, setSearch] = useState('')
+  const { terms: recentSearches, logSearch } = useRecentSearches('appointment')
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [showWalkIn, setShowWalkIn] = useState(false)
-  const [services, setServices] = useState([])
+  const [modal, setModal] = useState(null) // { type: 'choice' } | { type: 'walkin' } | { type: 'block' } | { type: 'complete', appointment }
 
-  const load = (s) => {
+  const load = (s, from, to, q) => {
     setLoading(true)
-    api.get(`/salon/appointments?status=${s}`)
+    api.get('/salon/appointments', { params: { status: s, date_from: from || undefined, date_to: to || undefined, search: q || undefined } })
       .then(({ data }) => setAppointments(data.data ?? data))
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { load(status) }, [status])
-  useEffect(() => { api.get('/salon/services').then(({ data }) => setServices(data.data ?? data)) }, [])
+  useEffect(() => {
+    const timeout = setTimeout(() => load(status, dateFrom, dateTo, search), search ? 300 : 0)
+    return () => clearTimeout(timeout)
+  }, [status, dateFrom, dateTo, search])
 
-  const NEXT_STATUS = { confirm: 'confirmed', complete: 'completed', cancel: 'cancelled' }
+  const NEXT_STATUS = { confirm: 'confirmed', complete: 'completed', cancel: 'cancelled', 'approve-cancellation': 'cancelled', 'deny-cancellation': 'confirmed' }
 
   const action = async (id, verb) => {
     // Optimistically remove from current list immediately
@@ -35,8 +48,13 @@ export default function Appointments() {
       if (next) setStatus(next) // switch to the tab where the appointment landed
     } catch (e) {
       // Restore list on failure
-      load(status)
+      load(status, dateFrom, dateTo, search)
     }
+  }
+
+  const onCompleted = () => {
+    setModal(null)
+    setStatus('completed') // switch to the tab where the appointment landed; triggers reload via the effect above
   }
 
   return (
@@ -45,11 +63,23 @@ export default function Appointments() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-prima-dark">{t('appointments.title')}</h1>
           <button
-            onClick={() => setShowWalkIn(true)}
+            onClick={() => setModal({ type: 'choice' })}
             className="px-3 sm:px-4 py-2 bg-prima-orange hover:bg-[#c93d15] text-white text-sm rounded-lg shadow-sm font-medium transition-colors"
           >
-            {t('appointments.addWalkIn')}
+            {t('appointments.addEntry')}
           </button>
+        </div>
+
+        <div className="space-y-2">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onBlur={() => logSearch(search)}
+            placeholder={t('appointments.searchPlaceholder')}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+          />
+          {!search && <RecentSearchChips terms={recentSearches} onSelect={setSearch} />}
         </div>
 
         <div className="flex gap-2 flex-wrap">
@@ -63,17 +93,68 @@ export default function Appointments() {
                   : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
               }`}
             >
-              {t('status.' + s)}
+              {s === 'all' ? t('common.all') : t('status.' + s)}
             </button>
           ))}
         </div>
 
-        {showWalkIn && (
-          <WalkInForm
-            services={services}
-            onClose={() => setShowWalkIn(false)}
-            onSaved={() => { setShowWalkIn(false); setStatus('confirmed'); load('confirmed') }}
-          />
+        <div className="flex flex-wrap items-end gap-3">
+          <Field label={t('appointments.dateFrom')}>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+              dir="ltr"
+            />
+          </Field>
+          <Field label={t('appointments.dateTo')}>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+              dir="ltr"
+            />
+          </Field>
+          {(dateFrom || dateTo) && (
+            <button
+              onClick={() => { setDateFrom(''); setDateTo('') }}
+              className="text-xs text-gray-400 hover:text-prima-dark underline pb-2"
+            >
+              {t('appointments.clearDates')}
+            </button>
+          )}
+        </div>
+
+        {modal?.type === 'choice' && (
+          <Modal onClose={() => setModal(null)}>
+            <WalkInOrBlockChoice
+              onPickWalkIn={() => setModal({ type: 'walkin' })}
+              onPickBlock={() => setModal({ type: 'block' })}
+            />
+          </Modal>
+        )}
+
+        {modal?.type === 'walkin' && (
+          <Modal onClose={() => setModal(null)}>
+            <WalkInForm
+              onClose={() => setModal(null)}
+              onSaved={() => { setModal(null); setStatus('confirmed'); load('confirmed') }}
+            />
+          </Modal>
+        )}
+
+        {modal?.type === 'block' && (
+          <Modal onClose={() => setModal(null)}>
+            <BlockForm onClose={() => setModal(null)} onSaved={() => setModal(null)} />
+          </Modal>
+        )}
+
+        {modal?.type === 'complete' && (
+          <Modal onClose={() => setModal(null)}>
+            <CompleteAppointmentForm appointment={modal.appointment} onClose={() => setModal(null)} onSaved={onCompleted} />
+          </Modal>
         )}
 
         {loading ? (
@@ -96,11 +177,16 @@ export default function Appointments() {
                     {appointments.map((a) => (
                       <tr key={a.id} className="border-t border-gray-100 hover:bg-slate-50/50">
                         <td className="px-6 py-3">{a.source === 'manual' ? a.client_name : a.client?.name ?? '—'}</td>
-                        <td className="px-6 py-3">{a.service?.name ?? (a.source === 'manual' ? t('appointments.other') : '—')}</td>
+                        <td className="px-6 py-3">
+                          {a.service?.name ?? (a.source === 'manual' ? t('appointments.other') : '—')}
+                          {a.cancellation_reason && (
+                            <p className="text-xs text-orange-500 italic mt-0.5">{t('appointments.cancellationReason')}: {a.cancellation_reason}</p>
+                          )}
+                        </td>
                         <td className="px-6 py-3">{new Date(a.scheduled_at).toLocaleString()}</td>
                         <td className="px-6 py-3 font-semibold text-prima-dark">${a.price_at_booking}</td>
                         <td className="px-6 py-3"><SourceBadge source={a.source} /></td>
-                        <td className="px-6 py-3"><ActionButtons status={status} id={a.id} action={action} /></td>
+                        <td className="px-6 py-3"><ActionButtons status={status} appointment={a} action={action} onComplete={() => setModal({ type: 'complete', appointment: a })} /></td>
                       </tr>
                     ))}
                   </tbody>
@@ -114,6 +200,9 @@ export default function Appointments() {
                     <div>
                       <p className="font-semibold text-prima-dark text-sm">{a.source === 'manual' ? a.client_name : a.client?.name ?? '—'}</p>
                       <p className="text-xs text-gray-500 mt-0.5">{a.service?.name ?? (a.source === 'manual' ? t('appointments.other') : '—')}</p>
+                      {a.cancellation_reason && (
+                        <p className="text-xs text-orange-500 italic mt-0.5">{t('appointments.cancellationReason')}: {a.cancellation_reason}</p>
+                      )}
                     </div>
                     <SourceBadge source={a.source} />
                   </div>
@@ -121,7 +210,7 @@ export default function Appointments() {
                     <span>{new Date(a.scheduled_at).toLocaleString()}</span>
                     <span className="font-semibold text-prima-dark">${a.price_at_booking}</span>
                   </div>
-                  <div className="flex gap-2 pt-1"><ActionButtons status={status} id={a.id} action={action} /></div>
+                  <div className="flex gap-2 pt-1"><ActionButtons status={status} appointment={a} action={action} onComplete={() => setModal({ type: 'complete', appointment: a })} /></div>
                 </div>
               ))}
             </div>
@@ -141,8 +230,9 @@ function SourceBadge({ source }) {
   )
 }
 
-function ActionButtons({ status, id, action }) {
+function ActionButtons({ status, appointment, action, onComplete }) {
   const { t } = useTranslation()
+  const id = appointment.id
   return (
     <>
       {status === 'pending' && (
@@ -153,84 +243,62 @@ function ActionButtons({ status, id, action }) {
       )}
       {status === 'confirmed' && (
         <>
-          <Btn onClick={() => action(id, 'complete')} color="green">{t('common.complete')}</Btn>
+          <Btn onClick={onComplete} color="green">{t('common.complete')}</Btn>
           <Btn onClick={() => action(id, 'cancel')} color="red">{t('common.cancel')}</Btn>
+        </>
+      )}
+      {status === 'cancellation_requested' && (
+        <>
+          <Btn onClick={() => action(id, 'deny-cancellation')} color="green">{t('appointments.denyCancellation')}</Btn>
+          <Btn onClick={() => action(id, 'approve-cancellation')} color="red">{t('appointments.approveCancellation')}</Btn>
         </>
       )}
     </>
   )
 }
 
-const DURATION_OPTIONS = [15,30,45,60,75,90,105,120,135,150,165,180]
-
-function formatDuration(mins) {
-  if (mins < 60) return `${mins} min`
-  const h = Math.floor(mins / 60), m = mins % 60
-  return m ? `${h}h ${m}min` : `${h}h`
-}
-
-function WalkInForm({ services, onClose, onSaved }) {
+function CompleteAppointmentForm({ appointment, onClose, onSaved }) {
   const { t } = useTranslation()
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm()
+  const [price, setPrice] = useState(appointment.price_at_booking ?? '')
+  const [notes, setNotes] = useState(appointment.notes ?? '')
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const selectedServiceId = watch('salon_service_id')
-  const isOther = !selectedServiceId
-
-  const onSubmit = async (data) => {
+  const submit = async (e) => {
+    e.preventDefault()
+    setSaving(true)
     setError('')
     try {
-      const serviceId = data.salon_service_id ? Number(data.salon_service_id) : null
-      const payload = {
-        ...data,
-        salon_service_id: serviceId,
-        duration_minutes: serviceId ? undefined : Number(data.duration_minutes),
-      }
-      await api.post('/salon/appointments', payload)
+      await api.patch(`/salon/appointments/${appointment.id}/complete`, {
+        price_at_booking: price === '' ? undefined : Number(price),
+        notes: notes === '' ? null : notes,
+      })
       onSaved()
-    } catch (e) {
-      setError(e.response?.data?.message ?? t('appointments.failedToAdd'))
+    } catch (err) {
+      setError(err.response?.data?.message ?? t('appointments.completeFailed'))
+    } finally {
+      setSaving(false)
     }
   }
 
   return (
-    <div className="bg-white border border-gray-100 rounded-xl p-4 sm:p-6 shadow-sm">
-      <h2 className="font-semibold text-prima-dark mb-4">{t('appointments.addWalkInTitle')}</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label={t('appointments.clientName')} error={errors.client_name?.message}>
-          <input {...register('client_name', { required: true })} className={inp} placeholder={t('appointments.clientPlaceholder')} />
-        </Field>
-        <Field label={`${t('common.service')} (${t('common.optional')})`}>
-          <select {...register('salon_service_id')} className={inp}>
-            <option value="">{t('appointments.other')}</option>
-            {services.map((s) => (
-              <option key={s.id} value={s.id}>{s.name} ({s.duration_minutes} {t('appointments.min')})</option>
-            ))}
-          </select>
-        </Field>
-        {isOther && (
-          <Field label={t('appointments.duration')} error={errors.duration_minutes?.message}>
-            <select {...register('duration_minutes', { required: isOther })} className={inp} defaultValue="60">
-              {DURATION_OPTIONS.map((m) => (
-                <option key={m} value={m}>{formatDuration(m)}</option>
-              ))}
-            </select>
-          </Field>
-        )}
-        <Field label={t('appointments.dateTime')} error={errors.scheduled_at?.message}>
-          <input {...register('scheduled_at', { required: true })} type="datetime-local" className={inp} dir="ltr" />
+    <div className="p-4 sm:p-6">
+      <h2 className="font-semibold text-prima-dark mb-4">{t('appointments.completeTitle')}</h2>
+      <form onSubmit={submit} className="space-y-4">
+        <Field label={t('common.price')}>
+          <input type="number" step="0.01" min="0" value={price} onChange={(e) => setPrice(e.target.value)} className={inp} autoFocus />
         </Field>
         <Field label={t('common.notes')}>
-          <input {...register('notes')} className={inp} placeholder={t('appointments.optionalNotes')} />
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className={inp} rows={3} />
         </Field>
-        {error && <p className="col-span-full text-red-600 text-sm">{error}</p>}
-        <div className="col-span-full flex gap-3">
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+        <div className="flex gap-3">
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={saving}
             className="px-4 py-2 bg-prima-orange hover:bg-[#c93d15] text-white text-sm rounded-lg disabled:opacity-50 font-medium shadow-sm transition-colors"
           >
-            {isSubmitting ? t('common.saving') : t('appointments.addAppointment')}
+            {saving ? t('common.saving') : t('common.complete')}
           </button>
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
             {t('common.cancel')}
@@ -251,6 +319,7 @@ function Btn({ children, onClick, color }) {
 }
 
 const inp = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent'
+
 function Field({ label, error, children }) {
   return (
     <div>

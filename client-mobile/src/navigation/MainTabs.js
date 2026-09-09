@@ -2,14 +2,16 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Search, CalendarDays, Heart, ShoppingBag, User } from 'lucide-react-native';
 import { colors } from '../theme';
 
 // Explore screens
 import SalonListScreen from '../screens/explore/SalonListScreen';
 import SalonDetailScreen from '../screens/explore/SalonDetailScreen';
 import SalonReviewsScreen from '../screens/explore/SalonReviewsScreen';
+import SalonServicesScreen from '../screens/explore/SalonServicesScreen';
+import SalonGalleryScreen from '../screens/explore/SalonGalleryScreen';
 import AvailableSlotsScreen from '../screens/explore/AvailableSlotsScreen';
 import BookingConfirmScreen from '../screens/explore/BookingConfirmScreen';
 
@@ -20,6 +22,12 @@ import WriteReviewScreen from '../screens/appointments/WriteReviewScreen';
 
 // Favorites screens
 import FavoritesScreen from '../screens/favorites/FavoritesScreen';
+
+// Store screens
+import StoreListScreen from '../screens/store/StoreListScreen';
+import CartScreen from '../screens/store/CartScreen';
+import StoreOrdersListScreen from '../screens/store/StoreOrdersListScreen';
+import StoreOrderDetailScreen from '../screens/store/StoreOrderDetailScreen';
 
 // Profile screens
 import ProfileScreen from '../screens/profile/ProfileScreen';
@@ -37,11 +45,14 @@ const headerOptions = {
 };
 
 function ExploreStack() {
+  const { t } = useTranslation();
   return (
     <Stack.Navigator screenOptions={headerOptions}>
       <Stack.Screen name="SalonList" component={SalonListScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="SalonDetail" component={SalonDetailScreen} options={{ title: '' }} />
-      <Stack.Screen name="SalonReviews" component={SalonReviewsScreen} />
+      <Stack.Screen name="SalonDetail" component={SalonDetailScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="SalonReviews" component={SalonReviewsScreen} options={{ title: t('salons.customerReviews') }} />
+      <Stack.Screen name="SalonServices" component={SalonServicesScreen} options={{ title: t('salons.mostRequestedServices') }} />
+      <Stack.Screen name="SalonGallery" component={SalonGalleryScreen} options={{ title: t('salons.media') }} />
       <Stack.Screen name="AvailableSlots" component={AvailableSlotsScreen} />
       <Stack.Screen name="BookingConfirm" component={BookingConfirmScreen} />
     </Stack.Navigator>
@@ -58,12 +69,27 @@ function AppointmentsStack() {
   );
 }
 
+function StoreStack() {
+  const { t } = useTranslation();
+  return (
+    <Stack.Navigator screenOptions={headerOptions}>
+      <Stack.Screen name="StoreList" component={StoreListScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Cart" component={CartScreen} options={{ title: t('store.cart') }} />
+      <Stack.Screen name="StoreOrders" component={StoreOrdersListScreen} options={{ title: t('store.myOrders') }} />
+      <Stack.Screen name="StoreOrderDetail" component={StoreOrderDetailScreen} options={{ title: '' }} />
+    </Stack.Navigator>
+  );
+}
+
 function FavoritesStack() {
+  const { t } = useTranslation();
   return (
     <Stack.Navigator screenOptions={headerOptions}>
       <Stack.Screen name="FavoritesList" component={FavoritesScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="SalonDetail" component={SalonDetailScreen} options={{ title: '' }} />
-      <Stack.Screen name="SalonReviews" component={SalonReviewsScreen} />
+      <Stack.Screen name="SalonDetail" component={SalonDetailScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="SalonReviews" component={SalonReviewsScreen} options={{ title: t('salons.customerReviews') }} />
+      <Stack.Screen name="SalonServices" component={SalonServicesScreen} options={{ title: t('salons.mostRequestedServices') }} />
+      <Stack.Screen name="SalonGallery" component={SalonGalleryScreen} options={{ title: t('salons.media') }} />
       <Stack.Screen name="AvailableSlots" component={AvailableSlotsScreen} />
       <Stack.Screen name="BookingConfirm" component={BookingConfirmScreen} />
     </Stack.Navigator>
@@ -81,16 +107,23 @@ function ProfileStack() {
 }
 
 const TAB_ICONS = {
-  Explore:      { active: '🔍', inactive: '🔎' },
-  Appointments: { active: '📅', inactive: '📆' },
-  Favorites:    { active: '❤️', inactive: '🤍' },
-  Profile:      { active: '👤', inactive: '👥' },
+  Explore:      Search,
+  Appointments: CalendarDays,
+  Favorites:    Heart,
+  Store:        ShoppingBag,
+  Profile:      User,
 };
 
 function TabIcon({ name, focused }) {
-  const icons = TAB_ICONS[name];
+  const Icon = TAB_ICONS[name];
+  const color = focused ? colors.primary : 'rgba(255,255,255,0.6)';
   return (
-    <Text style={{ fontSize: 22 }}>{focused ? icons.active : icons.inactive}</Text>
+    <Icon
+      size={22}
+      color={color}
+      fill={name === 'Favorites' && focused ? color : 'transparent'}
+      strokeWidth={1.75}
+    />
   );
 }
 
@@ -110,7 +143,7 @@ export default function MainTabs() {
           paddingTop: 4,
         },
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.45)',
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.6)',
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
@@ -128,6 +161,11 @@ export default function MainTabs() {
         name="Favorites"
         component={FavoritesStack}
         options={{ tabBarLabel: t('tabs.favorites'), tabBarIcon: ({ focused }) => <TabIcon name="Favorites" focused={focused} /> }}
+      />
+      <Tab.Screen
+        name="Store"
+        component={StoreStack}
+        options={{ tabBarLabel: t('tabs.store'), tabBarIcon: ({ focused }) => <TabIcon name="Store" focused={focused} /> }}
       />
       <Tab.Screen
         name="Profile"

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../../api/axios'
 import Layout from '../../components/Layout'
+import RecentSearchChips from '../../components/RecentSearchChips'
+import useRecentSearches from '../../hooks/useRecentSearches'
 
 const STATUS_COLORS = {
   completed: 'bg-green-100 text-green-700',
@@ -18,6 +20,7 @@ export default function Clients() {
   const [selected, setSelected] = useState(null)
   const [detail, setDetail] = useState(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  const { terms: recentSearches, logSearch } = useRecentSearches('client')
 
   useEffect(() => {
     api.get('/salon/clients').then(({ data }) => {
@@ -73,13 +76,17 @@ export default function Clients() {
             </div>
 
             {/* Search */}
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('clients.searchPlaceholder')}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
-            />
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onBlur={() => logSearch(search)}
+                placeholder={t('clients.searchPlaceholder')}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+              />
+              {!search && <RecentSearchChips terms={recentSearches} onSelect={setSearch} />}
+            </div>
 
             {/* Client list */}
             {loading ? (
@@ -155,6 +162,7 @@ function ClientRow({ client, active, onClick, t }) {
           </span>
         </div>
         {client.email && <p className="text-xs text-gray-400 truncate mt-0.5">{client.email}</p>}
+        {client.phone && <p className="text-xs text-gray-400 truncate mt-0.5" dir="ltr">{client.phone}</p>}
         <p className="text-xs text-gray-400 mt-0.5">
           {t('clients.visits', { count: client.total_visits })} · {t('clients.lastVisit')}: {new Date(client.last_visit).toLocaleDateString()}
         </p>
@@ -187,6 +195,7 @@ function DetailPanel({ client, detail, loading, onClose, t }) {
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-prima-dark truncate">{client.name}</p>
           {client.email && <p className="text-xs text-gray-400 truncate">{client.email}</p>}
+          {client.phone && <p className="text-xs text-gray-400 truncate" dir="ltr">{client.phone}</p>}
         </div>
         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
           client.type === 'app' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'

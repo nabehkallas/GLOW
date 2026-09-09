@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api\Client;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
+use App\Models\ScheduleBlock;
 use App\Models\SalonService;
 use App\Models\WorkingHour;
 use App\Notifications\AppointmentBooked;
+use App\Notifications\AppointmentCancellationRequested;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -18,7 +20,7 @@ class AppointmentController extends Controller
         $appointments = $request->user()
             ->appointments()
             ->with('salon', 'service')
-            ->when($request->status === 'upcoming', fn($q) => $q->whereIn('status', ['pending', 'confirmed']))
+            ->when($request->status === 'upcoming', fn($q) => $q->whereIn('status', ['pending', 'confirmed', 'cancellation_requested']))
             ->when($request->status === 'past',     fn($q) => $q->whereIn('status', ['completed', 'cancelled']))
             ->when($request->status && !in_array($request->status, ['upcoming', 'past']),
                 fn($q) => $q->where('status', $request->status))
@@ -88,6 +90,17 @@ class AppointmentController extends Controller
 
         abort_if($overlappingCount >= $capacity, 422, 'This time slot is fully booked. Please choose another time.');
 
+        $overlapsBlock = ScheduleBlock::where('salon_id', $service->salon_id)
+            ->whereDate('starts_at', $scheduledAt->toDateString())
+            ->where(fn($q) => $q->whereNull('salon_service_id')->orWhere('salon_service_id', $service->id))
+            ->get()
+            ->contains(function ($block) use ($scheduledAt, $scheduledEnd) {
+                $blockEnd = $block->starts_at->copy()->addMinutes($block->duration_minutes);
+                return $scheduledAt->lt($blockEnd) && $scheduledEnd->gt($block->starts_at);
+            });
+
+        abort_if($overlapsBlock, 422, 'This time slot is unavailable. Please choose another time.');
+
         $appointment = Appointment::create([
             'client_id'        => $request->user()->id,
             'salon_id'         => $service->salon_id,
@@ -114,10 +127,25 @@ class AppointmentController extends Controller
     public function cancel(Request $request, Appointment $appointment)
     {
         abort_unless($appointment->client_id === $request->user()->id, 403);
-        abort_unless(in_array($appointment->status, ['pending', 'confirmed']), 422, 'Cannot cancel this appointment.');
 
-        $appointment->update(['status' => 'cancelled']);
+        if ($appointment->status === 'pending') {
+            $appointment->update(['status' => 'cancelled']);
 
-        return new AppointmentResource($appointment->load('salon', 'service'));
+            return new AppointmentResource($appointment->load('salon', 'service'));
+        }
+
+        abort_unless($appointment->status === 'confirmed', 422, 'Cannot cancel this appointment.');
+
+        $data = $request->validate(['reason' => 'nullable|string|max:500']);
+
+        $appointment->update([
+            'status'               => 'cancellation_requested',
+            'cancellation_reason'  => $data['reason'] ?? null,
+        ]);
+
+        $appointment->load('salon.user', 'service');
+        $appointment->salon->user?->notify(new AppointmentCancellationRequested($appointment));
+
+        return new AppointmentResource($appointment);
     }
 }

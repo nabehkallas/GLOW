@@ -22,7 +22,15 @@ class Salon extends Model
         'status',
         'capacity',
         'rejection_reason',
+        'balance_management_enabled',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'balance_management_enabled' => 'boolean',
+        ];
+    }
 
     public function user()
     {
@@ -44,9 +52,19 @@ class Salon extends Model
         return $this->hasMany(Appointment::class);
     }
 
+    public function transactions()
+    {
+        return $this->hasMany(SalonTransaction::class);
+    }
+
     public function workingHours()
     {
         return $this->hasMany(WorkingHour::class)->orderBy('day_of_week');
+    }
+
+    public function scheduleBlocks()
+    {
+        return $this->hasMany(ScheduleBlock::class);
     }
 
     public function reviews()

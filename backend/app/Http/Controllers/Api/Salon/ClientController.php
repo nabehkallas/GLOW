@@ -37,6 +37,7 @@ class ClientController extends Controller
             'user_id'          => $row->client_id,
             'name'             => $users[$row->client_id]?->name ?? '—',
             'email'            => $users[$row->client_id]?->email ?? null,
+            'phone'            => $users[$row->client_id]?->phone ?? null,
             'total_visits'     => (int) $row->total_visits,
             'completed_visits' => (int) $row->completed_visits,
             'cancelled_visits' => (int) $row->cancelled_visits,
@@ -61,10 +62,20 @@ class ClientController extends Controller
             ->groupBy('client_name')
             ->get();
 
+        // Walk-in phone can vary between visits if mistyped — use the most recent one on file.
+        $latestPhones = Appointment::where('salon_id', $salonId)
+            ->whereNull('client_id')
+            ->whereIn('client_name', $walkInRows->pluck('client_name'))
+            ->orderByDesc('scheduled_at')
+            ->get(['client_name', 'client_phone'])
+            ->unique('client_name')
+            ->keyBy('client_name');
+
         $walkInClients = $walkInRows->map(fn($row) => [
             'type'             => 'walkin',
             'name'             => $row->client_name,
             'email'            => null,
+            'phone'            => $latestPhones[$row->client_name]->client_phone ?? null,
             'total_visits'     => (int) $row->total_visits,
             'completed_visits' => (int) $row->completed_visits,
             'cancelled_visits' => (int) $row->cancelled_visits,
@@ -98,6 +109,7 @@ class ClientController extends Controller
                 'user_id'          => $userId,
                 'name'             => $user?->name ?? '—',
                 'email'            => $user?->email,
+                'phone'            => $user?->phone,
                 'stats'            => $this->buildStats($appointments),
                 'appointments'     => AppointmentResource::collection($appointments),
             ],
@@ -121,6 +133,7 @@ class ClientController extends Controller
                 'type'         => 'walkin',
                 'name'         => $request->name,
                 'email'        => null,
+                'phone'        => $appointments->first()?->client_phone,
                 'stats'        => $this->buildStats($appointments),
                 'appointments' => AppointmentResource::collection($appointments),
             ],

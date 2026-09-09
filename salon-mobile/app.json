@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Prima Salon",
+    "slug": "prima-salon",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/splash-icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.prima.salon"
+    },
+    "android": {
+      "package": "com.prima.salon",
+      "adaptiveIcon": {
+        "backgroundColor": "#f4f6f5",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-video",
+      [
+        "expo-notifications",
+        {
+          "color": "#e8481c",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Prima Salon to access your photos to upload media and logos."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Prima Salon to use your location to set your salon's address."
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-status-bar"
+    ]
+  }
+}

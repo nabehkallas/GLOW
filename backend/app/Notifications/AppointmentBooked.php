@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use App\Models\Appointment;
-use App\Notifications\Channels\ExpoChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -15,38 +14,29 @@ class AppointmentBooked extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database', ExpoChannel::class];
+        // Recipient is the salon owner, who uses salon-web (browser), not the
+        // client-mobile app — there is no push channel for them yet (Item #10
+        // will add one when salon-web becomes an Expo app).
+        return ['database'];
     }
 
     public function toArray(object $notifiable): array
     {
         $scheduledAt = $this->appointment->scheduled_at->format('D, M j \a\t g:i A');
+        $service = $this->appointment->service?->name ?? 'A service';
+        $locale = $notifiable->locale ?? 'ar';
+
+        $body = trans('notifications.appointment_booked.body', ['service' => $service, 'time' => $scheduledAt], $locale);
 
         return [
             'type'           => 'appointment_booked',
             'appointment_id' => $this->appointment->id,
             'client_name'    => $this->appointment->client?->name ?? 'A client',
-            'service_name'   => $this->appointment->service?->name ?? 'A service',
+            'service_name'   => $service,
             'scheduled_at'   => $this->appointment->scheduled_at->toDateTimeString(),
-            'title'          => 'حجز جديد',
-            'body'           => "حجز {$this->appointment->service?->name} – {$scheduledAt}",
-            'message'        => "New booking: {$this->appointment->service?->name} on {$scheduledAt}",
-        ];
-    }
-
-    public function toExpoPush(object $notifiable): array
-    {
-        $scheduledAt = $this->appointment->scheduled_at->format('D, M j \a\t g:i A');
-
-        return [
-            'to'    => $notifiable->expo_push_token,
-            'title' => 'حجز جديد',
-            'body'  => "{$this->appointment->client?->name} – {$this->appointment->service?->name} – {$scheduledAt}",
-            'data'  => [
-                'type'           => 'appointment_booked',
-                'appointment_id' => $this->appointment->id,
-            ],
-            'sound' => 'default',
+            'title'          => trans('notifications.appointment_booked.title', [], $locale),
+            'body'           => $body,
+            'message'        => $body,
         ];
     }
 }

@@ -10,11 +10,14 @@ class Appointment extends Model
         'client_id',
         'salon_id',
         'salon_service_id',
+        'duration_minutes',
         'scheduled_at',
         'status',
         'source',
         'client_name',
+        'client_phone',
         'notes',
+        'cancellation_reason',
         'price_at_booking',
     ];
 

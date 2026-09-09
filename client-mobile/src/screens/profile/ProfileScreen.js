@@ -5,6 +5,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pencil, Star, Bell, Globe, ChevronLeft } from 'lucide-react-native';
 import api from '../../api/client';
 import useAuthStore from '../../stores/authStore';
 import LanguageToggle from '../../components/LanguageToggle';
@@ -13,9 +14,9 @@ import { colors, spacing, radius } from '../../theme';
 const logo = require('../../../assets/logo.png');
 
 const NAV_ITEMS = [
-  { key: 'editProfile',    icon: '✏️',  screen: 'EditProfile' },
-  { key: 'myReviews',      icon: '⭐',  screen: 'MyReviews' },
-  { key: 'notifications',  icon: '🔔',  screen: 'NotificationsModal', titleKey: 'notifications.title' },
+  { key: 'editProfile',    Icon: Pencil, screen: 'EditProfile' },
+  { key: 'myReviews',      Icon: Star,   screen: 'MyReviews' },
+  { key: 'notifications',  Icon: Bell,   screen: 'NotificationsModal', titleKey: 'notifications.title' },
 ];
 
 export default function ProfileScreen({ navigation }) {
@@ -79,27 +80,25 @@ export default function ProfileScreen({ navigation }) {
           <View style={s.statDivider} />
           <View style={s.stat}>
             <Text style={s.statValue}>
-              {analytics?.total_spent ? analytics.total_spent : '—'}
+              {analytics?.total_spent ? t('salons.price', { amount: analytics.total_spent }) : '—'}
             </Text>
-            <Text style={s.statLabel}>
-              {analytics?.total_spent ? 'ل.س ' + t('profile.totalSpent') : t('profile.totalSpent')}
-            </Text>
+            <Text style={s.statLabel}>{t('profile.totalSpent')}</Text>
           </View>
         </View>
 
         {/* Nav */}
         <View style={s.navCard}>
-          {NAV_ITEMS.map(({ key, icon, screen, titleKey }, i) => (
+          {NAV_ITEMS.map(({ key, Icon, screen, titleKey }, i) => (
             <TouchableOpacity
               key={key}
               style={s.navRow}
               onPress={() => navigation.navigate(screen)}
               activeOpacity={0.7}
             >
-              <Text style={s.chevron}>›</Text>
+              <ChevronLeft size={20} color={colors.textMuted} strokeWidth={1.75} />
               <Text style={s.navLabel}>{t(titleKey ?? `profile.${key}`)}</Text>
               <View style={s.navIcon}>
-                <Text style={{ fontSize: 18 }}>{icon}</Text>
+                <Icon size={18} color={colors.dark} strokeWidth={1.75} />
               </View>
             </TouchableOpacity>
           ))}
@@ -109,7 +108,7 @@ export default function ProfileScreen({ navigation }) {
             <LanguageToggle />
             <Text style={s.navLabel}>اللغة / Language</Text>
             <View style={s.navIcon}>
-              <Text style={{ fontSize: 18 }}>🌐</Text>
+              <Globe size={18} color={colors.dark} strokeWidth={1.75} />
             </View>
           </View>
         </View>
@@ -180,7 +179,6 @@ const s = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   navLabel: { flex: 1, fontSize: 15, color: colors.dark, fontWeight: '500', textAlign: 'right', marginHorizontal: spacing.sm },
-  chevron: { fontSize: 22, color: colors.textMuted },
 
   logoutBtn: {
     height: 52, borderRadius: radius.md,

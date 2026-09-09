@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import api from '../../api/axios'
 import useAuthStore from '../../store/auth'
 
 export default function Login() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -20,13 +22,13 @@ export default function Login() {
     try {
       const { data } = await api.post('auth/login', { email, password })
       if (data.user?.role !== 'admin') {
-        setError('Access denied. Admin accounts only.')
+        setError(t('login.accessDenied'))
         return
       }
       setAuth(data.user, data.token)
       navigate('/')
     } catch (err) {
-      setError(err.response?.data?.message ?? 'Login failed.')
+      setError(err.response?.data?.message ?? t('login.loginFailed'))
     } finally {
       setLoading(false)
     }
@@ -39,14 +41,14 @@ export default function Login() {
         {/* Dark logo header */}
         <div className="bg-prima-dark flex flex-col items-center pb-4">
           <img src="/Prima-logo.png" alt="Prima" className="w-full h-40 md:h-56 object-cover object-center" />
-          <p className="text-slate-400 text-xs mt-1 pb-2">Management Panel</p>
+          <p className="text-slate-400 text-xs mt-1 pb-2">{t('login.subtitle')}</p>
         </div>
 
         {/* Form section */}
         <div className="p-8">
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-prima-dark mb-1">Email</label>
+              <label className="block text-xs font-medium text-prima-dark mb-1">{t('login.email')}</label>
               <input
                 type="email"
                 value={email}
@@ -56,7 +58,7 @@ export default function Login() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-prima-dark mb-1">Password</label>
+              <label className="block text-xs font-medium text-prima-dark mb-1">{t('login.password')}</label>
               <input
                 type="password"
                 value={password}
@@ -71,7 +73,7 @@ export default function Login() {
               disabled={loading}
               className="w-full py-2.5 bg-prima-orange hover:bg-[#c93d15] text-white text-sm font-semibold rounded-lg shadow-sm disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Signing in…' : 'Sign in'}
+              {loading ? t('login.signingIn') : t('login.signIn')}
             </button>
           </form>
         </div>

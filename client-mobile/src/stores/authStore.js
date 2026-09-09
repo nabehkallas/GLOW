@@ -1,7 +1,12 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api/client';
+import i18n from '../i18n';
 import { registerForPushNotifications } from '../services/pushNotifications';
+
+function syncLocale() {
+  api.patch('/auth/locale', { locale: i18n.language }).catch(() => {});
+}
 
 const useAuthStore = create((set, get) => ({
   user: null,
@@ -20,6 +25,7 @@ const useAuthStore = create((set, get) => ({
       if (user.role !== 'client') throw new Error('not a client');
       set({ token, user, isLoading: false });
       registerForPushNotifications();
+      syncLocale();
     } catch {
       await AsyncStorage.removeItem('token');
       set({ token: null, user: null, isLoading: false });
@@ -33,6 +39,7 @@ const useAuthStore = create((set, get) => ({
     await AsyncStorage.setItem('token', token);
     set({ token, user });
     registerForPushNotifications();
+    syncLocale();
   },
 
   logout: async () => {

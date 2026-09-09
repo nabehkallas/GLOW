@@ -1,9 +1,44 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getNotifications, getUnreadCount, markAllRead, markRead } from '../api/notifications'
 
+// Where each notification type should take the salon owner when clicked.
+function routeForNotification(data) {
+  switch (data?.type) {
+    case 'appointment_booked':
+    case 'appointment_status_changed':
+      return '/appointments'
+    case 'order_status_changed':
+      return '/orders?tab=orders'
+    case 'salon_approved':
+    case 'salon_rejected':
+      return '/dashboard'
+    default:
+      return null
+  }
+}
+
+function notificationText(t, data) {
+  switch (data?.type) {
+    case 'appointment_booked':
+      return t('notifications.messages.appointment_booked', { clientName: data.client_name, serviceName: data.service_name })
+    case 'appointment_status_changed':
+      return t('notifications.messages.appointment_status_changed', { serviceName: data.service_name, status: t('status.' + data.new_status) })
+    case 'order_status_changed':
+      return t('notifications.messages.order_status_changed', { id: data.order_id, status: t('status.' + data.new_status) })
+    case 'salon_approved':
+      return t('notifications.messages.salon_approved', { name: data.salon_name })
+    case 'salon_rejected':
+      return t('notifications.messages.salon_rejected', { name: data.salon_name, reason: data.reason })
+    default:
+      return data?.message ?? null
+  }
+}
+
 export default function NotificationBell({ dark = false }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [unread, setUnread] = useState(0)
   const [notifications, setNotifications] = useState([])
@@ -14,7 +49,7 @@ export default function NotificationBell({ dark = false }) {
 
   useEffect(() => {
     fetchUnreadCount()
-    const interval = setInterval(fetchUnreadCount, 30000)
+    const interval = setInterval(fetchUnreadCount, 15000)
     return () => clearInterval(interval)
   }, [])
 
@@ -49,7 +84,7 @@ export default function NotificationBell({ dark = false }) {
     try {
       const { data } = await getNotifications()
       const list = data.data ?? data
-      setNotifications(list.map((n) => ({ ...n, read_at: n.read_at ?? new Date().toISOString() })))
+      setNotifications(list)
       if (list.some((n) => !n.read_at)) {
         markAllRead().catch(() => {})
         setUnread(0)
@@ -63,6 +98,15 @@ export default function NotificationBell({ dark = false }) {
     await markRead(id)
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read_at: new Date().toISOString() } : n))
     setUnread((c) => Math.max(0, c - 1))
+  }
+
+  const handleNotificationClick = (n) => {
+    if (!n.read_at) handleMarkRead(n.id)
+    const route = routeForNotification(n.data)
+    if (route) {
+      setOpen(false)
+      navigate(route)
+    }
   }
 
   const handleMarkAll = async () => {
@@ -113,18 +157,20 @@ export default function NotificationBell({ dark = false }) {
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  onClick={() => !n.read_at && handleMarkRead(n.id)}
+                  onClick={() => handleNotificationClick(n)}
                   className={`px-4 py-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors ${!n.read_at ? 'bg-blue-50' : ''}`}
                 >
-                  <p className={`text-sm ${!n.read_at ? 'text-gray-900 font-medium' : 'text-gray-600'}`}>
-                    {n.data?.title ?? n.data?.message ?? t('notifications.new')}
-                  </p>
-                  {n.data?.body && (
-                    <p className="text-xs text-gray-500 mt-0.5">{n.data.body}</p>
-                  )}
-                  <p className="text-xs text-gray-400 mt-1">
-                    {new Date(n.created_at).toLocaleString()}
-                  </p>
+                  <div className="flex items-start gap-2">
+                    {!n.read_at && <span className="w-2 h-2 rounded-full bg-red-500 mt-1.5 shrink-0" />}
+                    <div className="min-w-0">
+                      <p className={`text-sm ${!n.read_at ? 'text-gray-900 font-medium' : 'text-gray-600'}`}>
+                        {notificationText(t, n.data) ?? t('notifications.new')}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(n.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               ))
             )}

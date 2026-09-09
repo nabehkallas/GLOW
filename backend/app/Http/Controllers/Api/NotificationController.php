@@ -38,4 +38,32 @@ class NotificationController extends Controller
 
         return response()->json(['message' => 'All notifications marked as read.']);
     }
+
+    public function webPushSubscribe(Request $request)
+    {
+        $data = $request->validate([
+            'endpoint'        => 'required|string',
+            'keys.p256dh'     => 'required|string',
+            'keys.auth'       => 'required|string',
+            'contentEncoding' => 'nullable|string',
+        ]);
+
+        $request->user()->updatePushSubscription(
+            $data['endpoint'],
+            $data['keys']['p256dh'],
+            $data['keys']['auth'],
+            $data['contentEncoding'] ?? null,
+        );
+
+        return response()->json(['message' => 'Subscribed.']);
+    }
+
+    public function webPushUnsubscribe(Request $request)
+    {
+        $request->validate(['endpoint' => 'required|string']);
+
+        $request->user()->deletePushSubscription($request->endpoint);
+
+        return response()->json(['message' => 'Unsubscribed.']);
+    }
 }

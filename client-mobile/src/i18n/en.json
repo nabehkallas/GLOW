@@ -10,6 +10,7 @@
     "close": "Close",
     "back": "Back",
     "search": "Search",
+    "recentSearches": "Recent searches",
     "noData": "No data available",
     "all": "All"
   },
@@ -35,11 +36,13 @@
     "explore": "Explore",
     "appointments": "Appointments",
     "favorites": "Favorites",
+    "store": "Store",
     "profile": "Profile"
   },
   "salons": {
     "search": "Search salons...",
     "allCities": "All Cities",
+    "selectCity": "Select City",
     "sortByDistance": "Nearest first",
     "km": "km",
     "rating": "Rating",
@@ -55,7 +58,24 @@
     "open": "Open",
     "noSalons": "No salons found",
     "duration": "{{min}} min",
-    "price": "{{amount}} SYP"
+    "price": "${{amount}}",
+    "listView": "List",
+    "mapView": "Map",
+    "locationDenied": "Location access is needed to show the map",
+    "openNow": "Open Now",
+    "closedNow": "Closed",
+    "mostRequestedServices": "Most Requested Services",
+    "customerReviews": "Customer Reviews",
+    "viewAll": "View All",
+    "anonymous": "Anonymous",
+    "call": "Call",
+    "directions": "Directions",
+    "salonLocation": "Salon Location",
+    "badges": {
+      "topRated": "Top Rated",
+      "licensed": "Licensed",
+      "memberSince": "Member since {{year}}"
+    }
   },
   "slots": {
     "selectService": "Select Service",
@@ -85,10 +105,15 @@
       "pending": "Pending",
       "confirmed": "Confirmed",
       "completed": "Completed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "cancellation_requested": "Cancellation requested"
     },
     "cancel": "Cancel Appointment",
     "cancelConfirm": "Are you sure you want to cancel this appointment?",
+    "requestCancel": "Request Cancellation",
+    "requestCancelConfirm": "This appointment is already confirmed — the salon will need to approve your cancellation. Continue?",
+    "cancellationPending": "Waiting for the salon to respond to your cancellation request.",
+    "cancellationReason": "Reason",
     "leaveReview": "Leave a Review",
     "noUpcoming": "No upcoming appointments",
     "noPast": "No past appointments",
@@ -128,6 +153,66 @@
     "title": "Notifications",
     "markAllRead": "Mark all as read",
     "empty": "No notifications",
-    "unread": "Unread"
+    "unread": "Unread",
+    "messages": {
+      "appointment_booked": "New booking: {{serviceName}}",
+      "appointment_status_changed": "Your appointment for {{serviceName}} is now {{status}}.",
+      "client_order_status_changed": "Order #{{id}} is now {{status}}."
+    }
+  },
+  "store": {
+    "title": "Store",
+    "search": "Search products...",
+    "onOfferFilter": "On Offer",
+    "priceBreaksFilter": "Price Breaks",
+    "noProducts": "No products found",
+    "outOfStock": "Out of stock",
+    "addToCart": "Add to cart",
+    "cart": "Cart",
+    "cartEmpty": "Your cart is empty",
+    "cartEmptyMsg": "Add products from the store to get started",
+    "quantity": "Quantity",
+    "remove": "Remove",
+    "notes": "Notes (optional)",
+    "notesPlaceholder": "Add any notes about your order...",
+    "total": "Total",
+    "checkout": "Checkout",
+    "checkoutPayment": "Cash on delivery",
+    "orderSuccess": "Your order was placed successfully",
+    "orderSuccessMsg": "You'll be notified when your order status changes",
+    "myOrders": "My Orders",
+    "noOrders": "No orders yet",
+    "orderNumber": "Order #{{id}}",
+    "cancelOrder": "Cancel Order",
+    "cancelConfirm": "Are you sure you want to cancel this order?",
+    "requestCancelConfirm": "This order is already {{status}} — the admin will need to approve your cancellation. Continue?",
+    "cancelPending": "Your cancellation request is being reviewed.",
+    "requestReturn": "Request Return",
+    "requestReturnConfirm": "Request a return for this order? The admin will review your request.",
+    "returnPending": "Your return request is being reviewed.",
+    "status": {
+      "pending": "Awaiting approval",
+      "confirmed": "Confirmed",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled",
+      "failed": "Failed",
+      "returned": "Returned",
+      "return_requested": "Return requested",
+      "cancellation_requested": "Cancellation requested"
+    },
+    "timeline": {
+      "pending": "Waiting for admin approval",
+      "confirmed": "Confirmed, being prepared",
+      "shipped": "Your order is on its way",
+      "delivered": "Delivered successfully"
+    },
+    "chooseOptions": "Choose Options",
+    "selectOptions": "Select an option for each attribute to continue.",
+    "combinationOutOfStock": "This combination is out of stock.",
+    "items": "{{count}} item(s)",
+    "viewCart": "View Cart",
+    "saleTag": "Sale",
+    "tierHintLabel": "Buy more, save more:"
   }
 }

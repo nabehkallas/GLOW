@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import api from '../../api/client';
+import StarRating from '../../components/StarRating';
 import { colors, spacing, radius, shadow } from '../../theme';
 
 export default function WriteReviewScreen({ route, navigation }) {
@@ -30,11 +31,7 @@ export default function WriteReviewScreen({ route, navigation }) {
     <ScrollView style={s.root} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
       <Text style={s.label}>{t('review.rating')}</Text>
       <View style={s.stars}>
-        {[1, 2, 3, 4, 5].map((n) => (
-          <TouchableOpacity key={n} onPress={() => setRating(n)} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}>
-            <Text style={[s.star, n <= rating && s.starActive]}>{n <= rating ? '⭐' : '☆'}</Text>
-          </TouchableOpacity>
-        ))}
+        <StarRating rating={rating} onChange={setRating} size={36} gap={12} />
       </View>
 
       <Text style={s.label}>{t('review.comment')}</Text>
@@ -66,9 +63,7 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.md },
   label: { fontSize: 15, fontWeight: '700', color: colors.dark, textAlign: 'right', marginBottom: spacing.sm, marginTop: spacing.md },
-  stars: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginBottom: spacing.md },
-  star: { fontSize: 36, color: '#e0e0e0' },
-  starActive: { color: '#ffa726' },
+  stars: { flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.md },
   textarea: {
     backgroundColor: colors.card, borderRadius: radius.md, padding: spacing.md,
     minHeight: 120, fontSize: 15, color: colors.dark, ...shadow, marginBottom: spacing.lg,

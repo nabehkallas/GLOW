@@ -16,6 +16,34 @@ function MainOrAuth() {
   return user ? <MainTabs /> : <AuthStack />;
 }
 
+// Where a notification's data payload should take the user, expressed as a
+// nested navigate() call into MainTabs (Main -> tab -> screen -> params).
+// `navigator` is anything with a .navigate() method — a navigation prop or a navigationRef.current.
+export function navigateForNotification(navigator, data) {
+  if (!navigator?.navigate || !data?.type) return;
+  switch (data.type) {
+    case 'appointment_booked':
+    case 'appointment_status_changed':
+      // Seed the list screen first so the detail screen has somewhere to go back
+      // to within its own tab, instead of leaving a 1-deep stack that falls back
+      // to the tab navigator's own back-history (jumping to whatever tab was
+      // previously active) when the user presses back.
+      navigator.navigate('Main', { screen: 'Appointments', params: { screen: 'AppointmentList' } });
+      navigator.navigate('Main', {
+        screen: 'Appointments',
+        params: { screen: 'AppointmentDetail', params: { appointmentId: data.appointment_id } },
+      });
+      break;
+    case 'client_order_status_changed':
+      navigator.navigate('Main', { screen: 'Store', params: { screen: 'StoreOrders' } });
+      navigator.navigate('Main', {
+        screen: 'Store',
+        params: { screen: 'StoreOrderDetail', params: { orderId: data.order_id } },
+      });
+      break;
+  }
+}
+
 export default function RootNavigator() {
   const { user, isLoading, init } = useAuthStore();
   const loadIds = useFavoriteStore((s) => s.loadIds);
@@ -24,13 +52,10 @@ export default function RootNavigator() {
   useEffect(() => { init(); }, []);
   useEffect(() => { if (user) loadIds(); }, [user]);
 
-  // Navigate to Appointments when user taps a status-change notification
+  // Navigate to the relevant screen when a push notification is tapped
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
-      const type = response.notification.request.content.data?.type;
-      if (type === 'appointment_status_changed' || type === 'appointment_booked') {
-        navigationRef.current?.navigate('Appointments');
-      }
+      navigateForNotification(navigationRef.current, response.notification.request.content.data);
     });
     return () => sub.remove();
   }, []);

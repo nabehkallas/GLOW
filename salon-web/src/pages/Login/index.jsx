@@ -24,8 +24,8 @@ const registerSchema = z.object({
     /^(\+963|0)9[1-9]\d{7}$/,
     'phone_error'
   ),
-  lat: z.coerce.number().optional(),
-  lng: z.coerce.number().optional(),
+  latitude: z.coerce.number({ required_error: 'location_required', invalid_type_error: 'location_required' }).min(-90).max(90),
+  longitude: z.coerce.number({ required_error: 'location_required', invalid_type_error: 'location_required' }).min(-180).max(180),
 })
 
 export default function Login() {
@@ -47,7 +47,7 @@ export default function Login() {
 
   const handleLocationChange = (newLat, newLng) => {
     setLat(newLat); setLng(newLng)
-    setValue('lat', newLat); setValue('lng', newLng)
+    setValue('latitude', newLat); setValue('longitude', newLng)
   }
 
   const onSubmit = async (data) => {
@@ -59,7 +59,7 @@ export default function Login() {
         setAuth(res.data.user, res.data.token)
         navigate('/dashboard')
       } else {
-        const res = await api.post('/auth/register/salon', { ...data, lat, lng })
+        const res = await api.post('/auth/register/salon', data)
         setAuth(res.data.user, res.data.token)
         navigate('/dashboard')
       }
@@ -70,6 +70,7 @@ export default function Login() {
 
   const switchMode = (m) => { setMode(m); setError(''); setLat(null); setLng(null) }
   const phoneError = errors.phone ? t('auth.phoneError') : null
+  const locationError = (errors.latitude || errors.longitude) ? t('auth.locationRequired') : null
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-prima-light py-8">
@@ -122,6 +123,7 @@ export default function Login() {
                   </Field>
                 </div>
                 <LocationPicker lat={lat} lng={lng} onChange={handleLocationChange} />
+                {locationError && <p className="text-red-500 text-xs -mt-2">{locationError}</p>}
               </>
             )}
 

@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const logo = require('../../../assets/logo.png');
 import { useTranslation } from 'react-i18next';
 import { StatusBar } from 'expo-status-bar';
+import { CalendarDays } from 'lucide-react-native';
 import api from '../../api/client';
 import { colors, spacing, radius } from '../../theme';
 
@@ -15,6 +16,7 @@ const STATUS_META = {
   confirmed: { color: colors.green, bg: '#d1fae5', label: 'مؤكد' },
   completed: { color: '#64748b', bg: '#f1f5f9', label: 'مكتمل' },
   cancelled: { color: '#ef4444', bg: '#fee2e2', label: 'ملغي' },
+  cancellation_requested: { color: '#ff7043', bg: '#ffe0d1', label: 'طلب إلغاء' },
 };
 
 function AppointmentCard({ appt, onPress }) {
@@ -40,7 +42,7 @@ function AppointmentCard({ appt, onPress }) {
 
         <View style={s.cardBottom}>
           {appt.service?.price && (
-            <Text style={s.price}>{appt.service.price} ل.س</Text>
+            <Text style={s.price}>{t('salons.price', { amount: appt.service.price })}</Text>
           )}
           <View style={s.dateWrap}>
             <Text style={s.time}>{time}</Text>
@@ -108,7 +110,7 @@ export default function AppointmentListScreen({ navigation }) {
         ListEmptyComponent={
           !loading && (
             <View style={s.empty}>
-              <Text style={{ fontSize: 48, marginBottom: spacing.sm }}>📅</Text>
+              <CalendarDays size={40} color={colors.textMuted} strokeWidth={1.5} style={{ marginBottom: spacing.sm }} />
               <Text style={s.emptyText}>
                 {tab === 'upcoming' ? t('appointments.noUpcoming') : t('appointments.noPast')}
               </Text>

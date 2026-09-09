@@ -11,10 +11,12 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
+        // Not paginated — salon's own bounded catalog, not a public storefront.
         $products = Product::where('is_active', true)
-            ->when($request->category, fn($q) => $q->where('category', $request->category))
+            ->with(['attributes.values', 'variants' => fn($q) => $q->where('is_active', true), 'variants.attributeValues.attribute', 'variants.priceTiers', 'images', 'priceTiers'])
+            ->when($request->category, fn($q) => $q->where(fn($q2) => $q2->where('category_en', $request->category)->orWhere('category_ar', $request->category)))
             ->latest()
-            ->paginate(15);
+            ->get();
 
         return ProductResource::collection($products);
     }
